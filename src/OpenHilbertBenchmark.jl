@@ -1,0 +1,19 @@
+module OpenHilbertBenchmark
+
+using OpenHilbert
+using Random, LinearAlgebra, SpecialFunctions
+using CairoMakie
+
+export origfunc, Hfunc
+export SchwartzFunc, RationalFuncPolesRepresent, DRationdlFunc, LogRationalFunc, MixedFunc
+export get_funcname, get_algname, write_setting, loss_bench_report
+
+abstract type TestFunc{T<:Real} end
+
+include("schwartz.jl")
+include("rational.jl")
+include("rational_like.jl")
+include("mix.jl")
+include("benchreport.jl")
+
+end

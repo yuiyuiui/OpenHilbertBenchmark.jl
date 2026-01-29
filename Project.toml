@@ -1,0 +1,19 @@
+name = "OpenHilbertBenchmark"
+uuid = "193b6561-d362-4fb0-a8bf-e6eaeb999e68"
+
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OpenHilbert = "ffa2f958-ad6d-465d-bd8d-590d6974d61f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
+[compat]
+CairoMakie = "0.15.8"
+LinearAlgebra = "1.11.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
