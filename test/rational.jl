@@ -1,12 +1,14 @@
 @testset "RationalFuncPolesRepresent" begin
     @testset "Construction" begin
+        T = Float64
         Random.seed!(123)
         # Test basic construction
-        rtfpr = RationalFuncPolesRepresent(norder=1,
+        rtfpr = RationalFuncPolesRepresent(T; norder=1,
                                            poles_scale=1.0,
                                            npole=[3],
                                            amplitudes=[[1 / 3, 1 / 3, 1 / 3]],
                                            imag_gap=0.5)
+        @test rtfpr isa RationalFuncPolesRepresent{T}
         @test length(rtfpr.poles) == 1
         @test length(rtfpr.poles[1]) == 3
         @test length(rtfpr.amplitudes) == 1
@@ -26,18 +28,19 @@
     end
 
     @testset "origfunc correctness" begin
+        T = Float64
         Random.seed!(456)
         # Create a simple case with known poles
         # For a single simple pole p with amplitude a:
         # f(x) = a / (x - p)
         # This is complex, but real(f(x)) should match origfunc
 
-        rtfpr = RationalFuncPolesRepresent(norder=1,
+        rtfpr = RationalFuncPolesRepresent(T; norder=1,
                                            poles_scale=0.5,
                                            npole=[2],
                                            amplitudes=[[0.5, 0.5]],
                                            imag_gap=1.0)
-
+        @test rtfpr isa RationalFuncPolesRepresent{T}
         # Test that origfunc returns real values
         for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
             result = origfunc(x, rtfpr)
@@ -57,13 +60,14 @@
     end
 
     @testset "Hfunc correctness" begin
+        T = Float64
         Random.seed!(789)
-        rtfpr = RationalFuncPolesRepresent(norder=1,
+        rtfpr = RationalFuncPolesRepresent(T; norder=1,
                                            poles_scale=0.5,
                                            npole=[2],
                                            amplitudes=[[0.5, 0.5]],
                                            imag_gap=1.0)
-
+        @test rtfpr isa RationalFuncPolesRepresent{T}
         # Test that Hfunc returns real values
         for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
             result = Hfunc(x, rtfpr)
@@ -84,13 +88,14 @@
     end
 
     @testset "Type stability" begin
+        T = Float64
         Random.seed!(101)
-        rtfpr = RationalFuncPolesRepresent(norder=1,
+        rtfpr = RationalFuncPolesRepresent(T; norder=1,
                                            poles_scale=1.0,
                                            npole=[2],
                                            amplitudes=[[0.5, 0.5]],
                                            imag_gap=0.5)
-
+        @test rtfpr isa RationalFuncPolesRepresent{T}
         # Test origfunc type stability
         @test @inferred(origfunc(1.0, rtfpr)) isa Float64
 
@@ -99,13 +104,15 @@
     end
 
     @testset "Multi-order construction" begin
+        T = Float64
         Random.seed!(202)
         # Test construction with multiple orders
-        rtfpr = RationalFuncPolesRepresent(norder=2,
+        rtfpr = RationalFuncPolesRepresent(T; norder=2,
                                            poles_scale=1.0,
                                            npole=[2, 3],
                                            amplitudes=[[0.2, 0.2], [0.2, 0.2, 0.2]],
                                            imag_gap=0.5)
+        @test rtfpr isa RationalFuncPolesRepresent{T}
         @test length(rtfpr.poles) == 2
         @test length(rtfpr.poles[1]) == 2
         @test length(rtfpr.poles[2]) == 3
@@ -116,7 +123,8 @@
 
     @testset "Amplitude normalization" begin
         # Test that amplitudes must sum to 1
-        @test_throws AssertionError RationalFuncPolesRepresent(norder=1,
+        T = Float64
+        @test_throws AssertionError RationalFuncPolesRepresent(T; norder=1,
                                                                poles_scale=1.0,
                                                                npole=[2],
                                                                amplitudes=[[0.3, 0.3]],  # sum = 0.6 ≠ 1

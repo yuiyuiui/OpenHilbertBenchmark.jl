@@ -1,6 +1,6 @@
 function get_funcname(func_type::SchwartzFunc{T}; details::Bool=false) where {T<:Real}
     !details && return "Schwartz"
-    return "exp(-func_type.A * abs((x - func_type.μ) / func_type.σ)^func_type.d)"
+    return "exp(-$(func_type.A) * abs((x - $(func_type.μ)) / $(func_type.σ))^$(func_type.d))"
 end
 
 function get_funcname(func_type::RationalFuncPolesRepresent{T};
@@ -52,7 +52,7 @@ function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod
     res = ""
     if !isnothing(dm)
         if dm isa OpenHilbert.AsymptoticDeMode
-            res *= "ASY DeMode, degree=$(dm.degree) + "
+            res *= "ASY DeMode, degree=$(dm.degree), mode length=$(dm.mode_length) + "
         elseif dm isa OpenHilbert.AAADeMode
             res *= "AAA DeMode, max_degree=$(dm.max_degree) + "
         end
@@ -62,15 +62,15 @@ function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod
         if pola isa OpenHilbert.NoPolation
             res *= "No Polation + "
         elseif pola isa OpenHilbert.InterPolation
-            res *= "Hann Interpolation + "
-        elseif pola isa OpenHilbert.Extrapolation
-            res *= "Hermitian Extrapolation + "
+            res *= "Hann InterPolation + "
+        elseif pola isa OpenHilbert.ExtraPolation
+            res *= "Hermitian ExtraPolation + "
         end
     end
 
     if !isnothing(trans)
         if trans isa OpenHilbert.FFTTrans
-            res *= "FFT Trans with pad rate = $(trans.pad_rate)"
+            res *= "FFT Trans with pad_rate = $(trans.pad_rate)"
         elseif trans isa OpenHilbert.FIRTrans
             res *= "FIR Trans"
         end
@@ -85,7 +85,7 @@ function write_setting(func_type::TestFunc{T}, L0_vec::Vector{<:Real}, grid_gap:
                        dm::Union{DeModeMethod,Nothing}=nothing,
                        pola::Union{PolationMethod,Nothing}=nothing,
                        trans::Union{DiscreteTransMethod,Nothing}=nothing) where {T<:Real}
-    open(joinpath(file_place, "setting.json"), "w") do f
+    open(joinpath(file_place, "setting.txt"), "w") do f
         write(f, "Used L0: $(round.(L0_vec, digits=2))\n")
         write(f, "grid_gap: $(round(grid_gap, digits=2))\n")
         write(f, "Points density: $(points_density)\n")
@@ -156,12 +156,13 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
     for j in 1:m
         L0 = L0_vec[j]
         println("Running test $j of $m, L0 = $L0")
-        N = round(Int, point_density * 2 * L0 + 1)
+        N = round(Int, point_density * L0) * 2 + 1
         h = T(2L0 / (N - 1))
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         local dm1
         if dm isa AsymptoticDeMode
-            dm1 = AsymptoticDeMode(; grid=x, degree=dm.degree, n=dm.n, is_print=dm.is_print)
+            dm1 = AsymptoticDeMode(; grid=x, degree=dm.degree, mode_length=dm.mode_length,
+                                   is_print=dm.is_print)
         elseif dm isa AAADeMode
             dm1 = AAADeMode(; grid=x, max_degree=dm.max_degree, show_poles=dm.show_poles)
         else
@@ -173,7 +174,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
 
         H_trunc = hilbert(f; dm=dm1, pola=NoPolation(), trans=trans)
         H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=round(Int, N / 64)), trans=trans)
-        H_herm = hilbert(f; dm=dm1, pola=Extrapolation(; n=round(Int, 3 / h), h=h),
+        H_herm = hilbert(f; dm=dm1, pola=ExtraPolation(; n=round(Int, 3 / h), h=h),
                          trans=trans)
 
         dH_herm = abs.(H_herm - H_exact)

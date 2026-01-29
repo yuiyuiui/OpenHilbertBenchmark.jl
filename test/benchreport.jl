@@ -13,7 +13,8 @@
 
     @testset "get_funcname for RationalFuncPolesRepresent" begin
         Random.seed!(42)
-        rtfpr = RationalFuncPolesRepresent(norder=1,
+        T = Float64
+        rtfpr = RationalFuncPolesRepresent(T; norder=1,
                                            poles_scale=1.0,
                                            npole=[2],
                                            amplitudes=[[0.5, 0.5]],
@@ -26,6 +27,8 @@
         # With details
         detailed = get_funcname(rtfpr; details=true)
         @test occursin("real(", detailed)
+
+        @test rtfpr isa RationalFuncPolesRepresent{T}
     end
 
     @testset "get_funcname for DRationdlFunc" begin
@@ -79,7 +82,7 @@
                           file_place=tmpdir, dm=nothing, pola=nothing, trans=nothing)
 
             # Check that file was created
-            setting_file = joinpath(tmpdir, "setting.json")
+            setting_file = joinpath(tmpdir, "setting.txt")
             @test isfile(setting_file)
 
             # Read and verify content

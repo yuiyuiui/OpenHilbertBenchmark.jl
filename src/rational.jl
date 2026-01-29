@@ -5,18 +5,22 @@ struct RationalFuncPolesRepresent{T<:Real} <: TestFunc{T}
     Hmask::Vector{Vector{Int}}   # mask for hilbert transform
 end
 
-function RationalFuncPolesRepresent(; norder::Int=1, poles_scale::Real=1,
+function RationalFuncPolesRepresent(::Type{T}; norder::Int=1, poles_scale::Real=1,
                                     npole::Vector{Int}=[2],
                                     amplitudes::AbstractVector{<:AbstractVector{<:Real}}=[ones(np)
                                                                                           for np in
                                                                                               npole] /
                                                                                          sum(npole),
                                     poles_filter::Function=(x -> !isnan(x) && imag(x) != 0),
-                                    imag_gap::Real=1 // 2)
-    T = promote_type(eltype(amplitudes[1]), typeof(poles_scale), typeof(imag_gap))
+                                    imag_gap::Real=1 // 2) where {T<:Real}
     @assert length(npole) == length(amplitudes) == norder
     @assert norder >= 1
     @assert norm(sum(sum.(amplitudes)) - 1) < eps(real(T))
+
+    poles_scale = T(poles_scale)
+    imag_gap = T(imag_gap)
+    amplitudes_converted = [T.(a) for a in amplitudes]
+
     poles_vec = Vector{Complex{T}}[]
     Hmask_vec = Vector{Int}[]
     for i in 1:norder
@@ -36,7 +40,6 @@ function RationalFuncPolesRepresent(; norder::Int=1, poles_scale::Real=1,
         push!(poles_vec, poles)
         push!(Hmask_vec, Hmask)
     end
-    amplitudes_converted = [T.(a) for a in amplitudes]
     return RationalFuncPolesRepresent(poles_vec, amplitudes_converted, poles_filter,
                                       Hmask_vec)
 end
