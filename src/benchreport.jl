@@ -8,15 +8,19 @@ function get_funcname(func_type::RationalFuncPolesRepresent{T};
     !details && return "Rational"
     @assert length(func_type.poles) == length(func_type.amplitudes) ==
             length(func_type.Hmask)
-    @assert length.(func_type.poles) .>= 1
+    @assert all(length.(func_type.poles) .>= 1)
     res = "real("
+    first = true
     for i in 1:length(func_type.poles)
         for j in 1:length(func_type.poles[i])
-            res += "$(round(func_type.amplitudes[i][j], digits=2))/(x - $(round(func_type.poles[i][j], digits=2)))^$(i)"
-            i < length(func_type.poles) && (res += " + ")
+            if !first
+                res *= " + "
+            end
+            res *= "$(round(func_type.amplitudes[i][j], digits=2))/(x - $(round(func_type.poles[i][j], digits=2)))^$(i)"
+            first = false
         end
     end
-    res += ")"
+    res *= ")"
     return res
 end
 
@@ -31,47 +35,56 @@ end
 function get_funcname(func_type::MixedFunc{T}; details::Bool=false) where {T<:Real}
     res = ""
     !isnothing(func_type.swf) &&
-        (res += get_funcname(func_type.swf; details=details) + " + ")
+        (res *= get_funcname(func_type.swf; details=details) * " + ")
     !isnothing(func_type.rtfpr) &&
-        (res += get_funcname(func_type.rtfpr; details=details) + " + ")
+        (res *= get_funcname(func_type.rtfpr; details=details) * " + ")
     !isnothing(func_type.drtf) &&
-        (res += get_funcname(func_type.drtf; details=details) + " + ")
+        (res *= get_funcname(func_type.drtf; details=details) * " + ")
     !isnothing(func_type.logrtf) &&
-        (res += get_funcname(func_type.logrtf; details=details) + " + ")
-    !endswith(res, " + ") && (res = res[1:(end - 1)])
+        (res *= get_funcname(func_type.logrtf; details=details) * " + ")
+    # Remove trailing " + " if present
+    endswith(res, " + ") && (res = res[1:(end - 3)])
     return res
 end
 
-function get_algname(dm::DeModeMethod, pola::PolationMethod,
-                     trans::DiscreteTransMethodexport)
+function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod,Nothing},
+                     trans::Union{DiscreteTransMethod,Nothing})
     res = ""
-    if dm isa AsymptoticDeMode
-        res += "ASY DeMode, degree=$(dm.degree) + "
-    elseif dm isa AAADeMode
-        res += "AAA DeMode, max_degree=$(dm.max_degree) + "
+    if !isnothing(dm)
+        if dm isa OpenHilbert.AsymptoticDeMode
+            res *= "ASY DeMode, degree=$(dm.degree) + "
+        elseif dm isa OpenHilbert.AAADeMode
+            res *= "AAA DeMode, max_degree=$(dm.max_degree) + "
+        end
     end
 
-    if pola isa NoPolation
-        res += "No Polation + "
-    elseif pola isa InterPolation
-        res += "Hann Interpolation + "
-    elseif pola isa Extrapolation
-        res += "Hermitian Extrapolation + "
+    if !isnothing(pola)
+        if pola isa OpenHilbert.NoPolation
+            res *= "No Polation + "
+        elseif pola isa OpenHilbert.InterPolation
+            res *= "Hann Interpolation + "
+        elseif pola isa OpenHilbert.Extrapolation
+            res *= "Hermitian Extrapolation + "
+        end
     end
 
-    if trans isa FFTTrans
-        res += "FFT Trans with pad rate = $pad_rate"
-    elseif trans isa FIRTrans
-        res += "FIR Trans"
+    if !isnothing(trans)
+        if trans isa OpenHilbert.FFTTrans
+            res *= "FFT Trans with pad rate = $(trans.pad_rate)"
+        elseif trans isa OpenHilbert.FIRTrans
+            res *= "FIR Trans"
+        end
     end
 
     return res
 end
 
-function write_setting(func_type::TestFunc{T}, L0_vec::Vector{Real}, grid_gap::Real,
+function write_setting(func_type::TestFunc{T}, L0_vec::Vector{<:Real}, grid_gap::Real,
                        points_density::Int;
-                       file_place::String=".", dm::DeModeMethod, pola::PolationMethod,
-                       trans::DiscreteTransMethodexport) where {T<:Real}
+                       file_place::String=".",
+                       dm::Union{DeModeMethod,Nothing}=nothing,
+                       pola::Union{PolationMethod,Nothing}=nothing,
+                       trans::Union{DiscreteTransMethod,Nothing}=nothing) where {T<:Real}
     open(joinpath(file_place, "setting.json"), "w") do f
         write(f, "Used L0: $(round.(L0_vec, digits=2))\n")
         write(f, "grid_gap: $(round(grid_gap, digits=2))\n")
@@ -85,10 +98,10 @@ end
 
 function loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
                          L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
-                         dm::DeModeMethod, pola::PolationMethod,
-                         trans::DiscreteTransMethodexport)
-    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, pola, trans))"
-    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, pola, trans))"
+                         func_type::TestFunc, dm::DeModeMethod,
+                         trans::DiscreteTransMethod)
+    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
+    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
 
     fig1 = Figure(; size=(800, 600))
     Label(fig1[0, 1], title1; tellwidth=false)
@@ -124,14 +137,13 @@ function loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_
 end
 
 # The DeModeMethod `dm` here does not provide grid, so we need to generate it ourselves.
-function loss_bench_report(funct_type::TestFunc{T}, dm::DeModeMethod;
-                           trans::DiscreteTransMethodexport=FIRTrans(); L0_start::Real=2^2,
-                           L0_rate::Real=2,
-                           test_num::Int=14, point_density::Int=2^5, is_saveset::Bool=false,
-                           file_place::String=".")
+function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
+                           trans::DiscreteTransMethod=FIRTrans(), L0_start::Real=2^2,
+                           L0_rate::Real=2, test_num::Int=14, point_density::Int=2^5,
+                           is_saveset::Bool=false, file_place::String=".") where {T<:Real}
     @assert test_num >= 1
     @assert point_density >= 1
-    h = T(1/32)
+    h = T(1 / 32)
     L0_vec = T.(L0_start * L0_rate .^ (0:(test_num - 1)))
     m = length(L0_vec)
     maxerr_herm_vec = zeros(T, m)
@@ -144,7 +156,7 @@ function loss_bench_report(funct_type::TestFunc{T}, dm::DeModeMethod;
     for j in 1:m
         L0 = L0_vec[j]
         println("Running test $j of $m, L0 = $L0")
-        N = point_num * 2 * L0 + 1
+        N = round(Int, point_density * 2 * L0 + 1)
         h = T(2L0 / (N - 1))
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         local dm1
@@ -156,8 +168,8 @@ function loss_bench_report(funct_type::TestFunc{T}, dm::DeModeMethod;
             error("Unsupported DeModeMethod: $dm")
         end
 
-        f = [origfunc(xi, funct_type) for xi in x]
-        H_exact = [Hfunc(xi, funct_type) for xi in x]
+        f = [origfunc(xi, func_type) for xi in x]
+        H_exact = [Hfunc(xi, func_type) for xi in x]
 
         H_trunc = hilbert(f; dm=dm1, pola=NoPolation(), trans=trans)
         H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=round(Int, N / 64)), trans=trans)
@@ -197,8 +209,10 @@ function loss_bench_report(funct_type::TestFunc{T}, dm::DeModeMethod;
         @show L2relerr_hann_vec[j]
         @show L2relerr_trunc_vec[j]
     end
+    is_saveset && write_setting(func_type, L0_vec, h, point_density; dm=dm, trans=trans,
+                                file_place=file_place)
 
     return loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
                            L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
-                           dm, pola, trans)
+                           func_type, dm, trans)
 end

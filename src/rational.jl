@@ -41,7 +41,7 @@ function RationalFuncPolesRepresent(; norder::Int=1, poles_scale::Real=1,
                                       Hmask_vec)
 end
 
-function origfunc(x::T; rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
+function origfunc(x::T, rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
     res = Complex{T}(0)
     for i in 1:length(rtfpr.poles)
         for j in 1:length(rtfpr.poles[i])
@@ -51,7 +51,7 @@ function origfunc(x::T; rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
     return real(res)
 end
 
-function Hfunc(x::T; rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
+function Hfunc(x::T, rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
     res = Complex{T}(0)
     for i in 1:length(rtfpr.poles)
         for j in 1:length(rtfpr.poles[i])

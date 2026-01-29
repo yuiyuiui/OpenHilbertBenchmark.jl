@@ -1,4 +1,22 @@
+"""
+    LogRationalFunc{T<:Real}
+
+Placeholder for log-rational functions.
+TODO: Implement specific log-rational function and its Hilbert transform.
+"""
 struct LogRationalFunc{T<:Real} <: TestFunc{T} end
+
+function LogRationalFunc(T::Type{<:Real})
+    return LogRationalFunc{T}()
+end
+
+function origfunc(x::T, lrf::LogRationalFunc{T}) where {T<:Real}
+    return error("LogRationalFunc origfunc not yet implemented")
+end
+
+function Hfunc(x::T, lrf::LogRationalFunc{T}) where {T<:Real}
+    return error("LogRationalFunc Hfunc not yet implemented")
+end
 
 """
     DRationdlFunc{T<:Real}

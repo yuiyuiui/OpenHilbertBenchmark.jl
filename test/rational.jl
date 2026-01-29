@@ -40,7 +40,7 @@
 
         # Test that origfunc returns real values
         for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
-            result = origfunc(x; rtfpr=rtfpr)
+            result = origfunc(x, rtfpr)
             @test result isa Real
             @test isfinite(result)
         end
@@ -53,7 +53,7 @@
                 expected += rtfpr.amplitudes[i][j] / (x - rtfpr.poles[i][j])^i
             end
         end
-        @test origfunc(x; rtfpr=rtfpr) ≈ real(expected)
+        @test origfunc(x, rtfpr) ≈ real(expected)
     end
 
     @testset "Hfunc correctness" begin
@@ -66,7 +66,7 @@
 
         # Test that Hfunc returns real values
         for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
-            result = Hfunc(x; rtfpr=rtfpr)
+            result = Hfunc(x, rtfpr)
             @test result isa Real
             @test isfinite(result)
         end
@@ -80,7 +80,7 @@
                             (x - rtfpr.poles[i][j])^i
             end
         end
-        @test Hfunc(x; rtfpr=rtfpr) ≈ real(expected)
+        @test Hfunc(x, rtfpr) ≈ real(expected)
     end
 
     @testset "Type stability" begin
@@ -92,10 +92,10 @@
                                            imag_gap=0.5)
 
         # Test origfunc type stability
-        @test @inferred(origfunc(1.0; rtfpr=rtfpr)) isa Float64
+        @test @inferred(origfunc(1.0, rtfpr)) isa Float64
 
         # Test Hfunc type stability
-        @test @inferred(Hfunc(1.0; rtfpr=rtfpr)) isa Float64
+        @test @inferred(Hfunc(1.0, rtfpr)) isa Float64
     end
 
     @testset "Multi-order construction" begin

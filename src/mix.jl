@@ -1,14 +1,14 @@
-struct MixedFunc{T<:Real}
+struct MixedFunc{T<:Real} <: TestFunc{T}
     swf::Union{SchwartzFunc{T},Nothing}
     rtfpr::Union{RationalFuncPolesRepresent{T},Nothing}
     drtf::Union{DRationdlFunc{T},Nothing}
     logrtf::Union{LogRationalFunc{T},Nothing}
 end
 
-function MixedFunc(T::Type{<:Real}; swf::Union{SchwartzFunc{T},Nothing}=nothing,
+function MixedFunc(::Type{T}; swf::Union{SchwartzFunc{T},Nothing}=nothing,
                    rtfpr::Union{RationalFuncPolesRepresent{T},Nothing}=nothing,
                    drtf::Union{DRationdlFunc{T},Nothing}=nothing,
-                   logrtf::Union{LogRationalFunc{T},Nothing}=nothing)
+                   logrtf::Union{LogRationalFunc{T},Nothing}=nothing) where {T<:Real}
     return MixedFunc{T}(swf, rtfpr, drtf, logrtf)
 end
 
