@@ -168,10 +168,27 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
     return fig1, fig2
 end
 
+struct PolationLength{T<:Real}
+    is_hann_length::Bool
+    hann_length::T
+    hann_length_rate::T
+    is_herm_length::Bool
+    herm_length::T
+    herm_length_rate::T
+end
+
+function PolationLength(::Type{T}; is_hann_length::Bool=false, hann_length::T=T(3),
+                        hann_length_rate::T=T(1 / 64), is_herm_length::Bool=true,
+                        herm_length::T=T(3), herm_length_rate::T=T(1 / 64)) where {T<:Real}
+    return PolationLength(is_hann_length, hann_length, hann_length_rate, is_herm_length,
+                          herm_length, herm_length_rate)
+end
+
 # The DeModeMethod `dm` here does not provide grid, so we need to generate it ourselves.
 function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
                            trans::DiscreteTransMethod=FIRTrans(), L0_start::Real=2^2,
                            L0_rate::Real=2, test_num::Int=14, point_density::Int=2^5,
+                           pola_len::PolationLength{T}=PolationLength(T),
                            is_saveset::Bool=false, file_place::String=".") where {T<:Real}
     @assert test_num >= 1
     @assert point_density >= 1
@@ -230,10 +247,21 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
         H_trunc = hilbert(f; dm=dm1, pola=NoPolation(), trans=trans)
-        H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=round(Int, N / 64)),
-                         trans=trans)
-        H_herm = hilbert(f; dm=dm1, pola=ExtraPolation(; n=round(Int, 3 / h), h=h),
-                         trans=trans)
+
+        if pola_len.is_hann_length
+            δ = round(Int, pola_len.hann_length / h)
+        else
+            δ = round(Int, N * pola_len.herm_length_rate)
+        end
+
+        if pola_len.is_herm_length
+            herm_n = round(Int, pola_len.herm_length / h)
+        else
+            herm_n = round(Int, N * pola_len.herm_length_rate)
+        end
+
+        H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=δ), trans=trans)
+        H_herm = hilbert(f; dm=dm1, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
 
         dH_herm = abs.(H_herm - H_exact)
         dH_hann = abs.(H_hann - H_exact)

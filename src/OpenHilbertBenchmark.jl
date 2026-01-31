@@ -8,7 +8,7 @@ export origfunc, Hfunc
 export SchwartzFunc, RationalFuncPolesRepresent, DRationdlFunc, LogRationalFunc, MixedFunc
 export get_funcname, get_algname, write_setting, loss_bench_report
 
-export DeModeMethod, PolationMethod, DiscreteTransMethod
+export DeModeMethod, PolationMethod, DiscreteTransMethod, PolationLength
 export AsymptoticDeMode, AAADeMode
 export NoPolation, InterPolation, ExtraPolation
 export FFTTrans, FIRTrans

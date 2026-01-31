@@ -16,7 +16,8 @@ dir = "./asy+fir/log_1"
 
 fig1, fig2 = loss_bench_report(func_type, dm; trans=FIRTrans(), L0_start=L0_start,
                                L0_rate=L0_rate, test_num=test_num,
-                               point_density=point_density, is_saveset=true, file_place=dir)
+                               point_density=point_density, is_saveset=false,
+                               file_place=dir)
 
 display(fig1)
 display(fig2)
