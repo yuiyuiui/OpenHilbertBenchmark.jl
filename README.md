@@ -1,17 +1,17 @@
 Test (vectors input) Open Hilbert transform algrorithm in OpenHilbert.jl
 
 # 1. Accuracy test
-|Points used $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
+|Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
 |---|---|---|---|---|
-|Type1: Schwartz Function|$10^6\sim10^{-5.5}$ | $10^2\sim10^{-16}$| $10^{2.5}\sim10^{-16}$|$10#\sim10^{-10}$ |
+|Type1: Schwartz Function|$10^6\sim10^{-5.5}$ | $10^2\sim10^{-16}$| $10^{2.5}\sim10^{-16}$|$10^{5.7}\sim10^{-12}$ |
 |Type2: Rantional Function (order number = 1)|$10^6\sim10^{-4}$ | $10^6\sim10^{-4}$|$10^4\sim 10^{-15}$ |$10^6\sim10^{-5}$ |
 |Type3: Rational Function (order number > 1)|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^5\sim10^{-15.5}$ |$10^6\sim10^{-6.5}$ |
 |Type4: Rational (order number > 1) + Schwartz|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^5\sim10^{-15.5}$ |$10^{5.5}\sim10^{-11}$ |
-|Type5: Log-Rational |$10^6\sim10^{-5.5}$ | $10^6\sim10^{-5.5}$ |$10^6\sim10^{-10}$ |${10^{5.7}\sim10^{-6}$|
-|Type6: Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^6\sim10^{-10}$ |✅ |
+|Type5: Log-Rational |$10^6\sim10^{-5.5}$ | $10^6\sim10^{-5.5}$ |$10^6\sim10^{-10}$ |$10^{5.7}\sim10^{-6}$|
+|Type6: Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^6\sim10^{-10}$ |$10^{5.7}\sim10^{-6}$ |
 |Type7: d-Rational|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^2\sim10^{-15.5}$ |$10^{5.5}\sim10^{-2}$ |
 |Type8: d-Rational + Rational (order number = 1) + Schwartz|$10^6\sim10^{-2}$ |$10^6\sim10^{-2}$ | $10^{5.7}\sim10^{-11}$ |$10^{5.5}\sim10^{-2}$ |
-|Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{6.3}\sim10^{-10}$ |✅ |
+|Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{6.3}\sim10^{-10}$ |$10^{5.7}\sim10^{-2}$ |
 
 # 2. Speed test
 |Objects/Methods|FFT|FIR|ASY|AAA|
