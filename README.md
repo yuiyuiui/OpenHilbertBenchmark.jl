@@ -2,7 +2,11 @@ Test (vectors input) Open Hilbert transform algrorithm in OpenHilbert.jl
 
 # 1. Accuracy test
 Points gap $h=2^{-5}\sim 2^{-4}$ 
+Function types explanation:
 
+- [1] Order of rational function: the maximum order of the poles
+- [2] Log-Rational function with : $O\left(1/|x|\ln |x|\right)$
+- [3] d-Rational function: $O\left(1/|x|^d\right)$
 
 |Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
 |---|---|---|---|---|
