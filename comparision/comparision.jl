@@ -1,3 +1,4 @@
+#=
 using OpenHilbert
 using LinearAlgebra, SpecialFunctions
 using CairoMakie
@@ -98,3 +99,4 @@ function comp_plot(method, h_vec, maxerr_mat)
 end
 
 compare(; pad_rate=1000, func_name=func_name)
+=#
