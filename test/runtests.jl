@@ -1,5 +1,5 @@
 using Test, LinearAlgebra, Random
-using SpecialFunctions
+using SpecialFunctions, QuadGK
 using OpenHilbertBenchmark
 
 Random.seed!(42)

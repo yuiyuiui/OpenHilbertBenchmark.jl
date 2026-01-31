@@ -28,8 +28,9 @@ function get_funcname(func_type::DRationdlFunc{T}; details::Bool=false) where {T
     return "$(round(func_type.d, digits=2))-Rationdl"
 end
 
-function get_funcname(func_type::LogRationalFunc{T}; details::Bool=false) where {T<:Real}
-    return "LogRational"
+function get_funcname(func_type::LogRationalFunc; details::Bool=false)
+    !details && return "$(round(func_type.d, digits=2))-LogRational"
+    return "x^2 / (x^2 + 2)^(1 + $(round(func_type.d, digits=2))/2) / log(x^2 + 2)"
 end
 
 function get_funcname(func_type::MixedFunc{T}; details::Bool=false) where {T<:Real}
@@ -96,12 +97,13 @@ end
 
 # ============================== Bench Method =========================================
 
-function loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
+function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
                          L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
                          func_type::TestFunc, dm::DeModeMethod,
                          trans::DiscreteTransMethod)
     title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
     title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
+    N_vec_str = ["10^$(round(log10(N), digits=2))" for N in N_vec]
 
     fig1 = Figure(; size=(800, 600))
     Label(fig1[0, 1], title1; tellwidth=false)
@@ -115,6 +117,21 @@ function loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_
     lines!(ax1, L0_vec, maxerr_herm_vec; label="Hermite")
     lines!(ax1, L0_vec, maxerr_hann_vec; label="Hann")
     lines!(ax1, L0_vec, maxerr_trunc_vec; label="Trunc")
+
+    ax1_top = Axis(fig1[1, 1];
+                   xlabel="Point Number",
+                   xaxisposition=:top,
+                   xscale=log10,
+                   yticksvisible=false,
+                   ylabelvisible=false,
+                   ylabel="",
+                   yticklabelsvisible=false,
+                   bottomspinevisible=false,
+                   leftspinevisible=false,
+                   rightspinevisible=false,
+                   topspinevisible=true)
+    linkxaxes!(ax1_top, ax1)
+    ax1_top.xticks = (L0_vec, N_vec_str)
 
     axislegend(ax1)
 
@@ -132,6 +149,21 @@ function loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_
     lines!(ax2, L0_vec, L2relerr_hann_vec; label="Hann")
     lines!(ax2, L0_vec, L2relerr_trunc_vec; label="Trunc")
 
+    ax2_top = Axis(fig2[1, 1];
+                   xlabel="Point Number",
+                   xaxisposition=:top,
+                   xscale=log10,
+                   yticksvisible=false,
+                   ylabelvisible=false,
+                   ylabel="",
+                   yticklabelsvisible=false,
+                   bottomspinevisible=false,
+                   leftspinevisible=false,
+                   rightspinevisible=false,
+                   topspinevisible=true)
+    linkxaxes!(ax2_top, ax2)
+    ax2_top.xticks = (L0_vec, N_vec_str)
+
     axislegend(ax2)
     return fig1, fig2
 end
@@ -143,8 +175,34 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
                            is_saveset::Bool=false, file_place::String=".") where {T<:Real}
     @assert test_num >= 1
     @assert point_density >= 1
-    h = T(1 / 32)
+    h = T(1 / point_density)
     L0_vec = T.(L0_start * L0_rate .^ (0:(test_num - 1)))
+    N_vec = [round(Int, point_density * L0) * 2 + 1 for L0 in L0_vec]
+    x0 = T.((-N_vec[end] ÷ 2):(N_vec[end] ÷ 2)) .* h
+    f0 = [origfunc(xi, func_type) for xi in x0]
+    mid = N_vec[end] ÷ 2 + 1
+
+    if func_type isa LogRationalFunc
+        @warn("Hilbert transform of LogRationalFunc does not have a closed form, using numerical approximation")
+        # cal_Hlogrtf_nume computes on a larger interval (internally uses L = 10*L0),
+        # so we slice its centered part to match the target grid x0 (length N_vec[end]).
+        H_log = cal_Hlogrtf_nume(L0_vec[end], point_density, func_type.d)
+        mid_log = length(H_log) ÷ 2 + 1
+        H_exact0 = H_log[(mid_log - N_vec[end] ÷ 2):(mid_log + N_vec[end] ÷ 2)]
+    elseif func_type isa MixedFunc && !isnothing(func_type.logrtf)
+        @warn("Hilbert transform of LogRationalFunc does not have a closed form, using numerical approximation")
+        func_type_log = MixedFunc(T; swf=func_type.swf, rtfpr=func_type.rtfpr,
+                                  drtf=func_type.drtf,
+                                  logrtf=nothing)
+        H_exact0 = [Hfunc(xi, func_type_log) for xi in x0]
+        H_log = cal_Hlogrtf_nume(L0_vec[end], point_density, func_type.logrtf.d)
+        mid_log = length(H_log) ÷ 2 + 1
+        H_log0 = H_log[(mid_log - N_vec[end] ÷ 2):(mid_log + N_vec[end] ÷ 2)]
+        H_exact0 .+= H_log0
+    else
+        H_exact0 = [Hfunc(xi, func_type) for xi in x0]
+    end
+
     m = length(L0_vec)
     maxerr_herm_vec = zeros(T, m)
     maxerr_hann_vec = zeros(T, m)
@@ -156,8 +214,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
     for j in 1:m
         L0 = L0_vec[j]
         println("Running test $j of $m, L0 = $L0")
-        N = round(Int, point_density * L0) * 2 + 1
-        h = T(2L0 / (N - 1))
+        N = N_vec[j]
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         local dm1
         if dm isa AsymptoticDeMode
@@ -169,11 +226,12 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
             error("Unsupported DeModeMethod: $dm")
         end
 
-        f = [origfunc(xi, func_type) for xi in x]
-        H_exact = [Hfunc(xi, func_type) for xi in x]
+        f = view(f0, (mid - N ÷ 2):(mid + N ÷ 2))
+        H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
         H_trunc = hilbert(f; dm=dm1, pola=NoPolation(), trans=trans)
-        H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=round(Int, N / 64)), trans=trans)
+        H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=round(Int, N / 64)),
+                         trans=trans)
         H_herm = hilbert(f; dm=dm1, pola=ExtraPolation(; n=round(Int, 3 / h), h=h),
                          trans=trans)
 
@@ -213,7 +271,21 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
     is_saveset && write_setting(func_type, L0_vec, h, point_density; dm=dm, trans=trans,
                                 file_place=file_place)
 
-    return loss_bench_plot(L0_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
+    return loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec,
+                           maxerr_trunc_vec,
                            L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
                            func_type, dm, trans)
+end
+
+function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
+    L = 100 * L0
+    N = round(Int, point_density * L) * 2 + 1
+    h = T(1 / point_density)
+    x = T.((-N ÷ 2):(N ÷ 2)) .* h
+    func(x) = x / (x^T(2) + T(2))^(T(1) + d / T(2)) / log(x^T(2) + T(2))
+    f = [func(xi) for xi in x]
+    # IMPORTANT: pass the grid so the transform matches the sampling step h.
+    dm = AsymptoticDeMode(; grid=x, degree=0)
+    Hf = hilbert(f; dm=dm, pola=NoPolation(), trans=FFTTrans(; pad_rate=0)) .* x
+    return Hf
 end

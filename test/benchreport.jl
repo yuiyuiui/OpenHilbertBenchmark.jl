@@ -117,4 +117,62 @@
             rm(tmpdir; recursive=true)
         end
     end
+
+    @testset "cal_Hlogrtf_nume (LogRationalFunc numerical approximation solution) basic properties" begin
+        T = Float64
+        L0 = T(2.0)
+        point_density = 8
+        d = 1
+
+        H_big = OpenHilbertBenchmark.cal_Hlogrtf_nume(L0, point_density, d)
+        N_big = round(Int, point_density * (100 * L0)) * 2 + 1
+
+        @test eltype(H_big) == T
+        @test length(H_big) == N_big
+        @test all(isfinite, H_big)
+
+        # when f(x) is an even function, the Hilbert transform should be an odd function: H(-x) = -H(x)
+        mid_big = length(H_big) ÷ 2 + 1
+        @test abs(H_big[mid_big]) ≤ 1e-6
+        @test maximum(abs.(H_big .+ reverse(H_big))) ≤ 1e-5
+
+        # take the center slice to match the target grid length N0 (corresponding to [-L0, L0])
+        N0 = round(Int, point_density * L0) * 2 + 1
+        H0 = H_big[(mid_big - N0 ÷ 2):(mid_big + N0 ÷ 2)]
+        @test length(H0) == N0
+        @test abs(H0[N0 ÷ 2 + 1]) ≤ 1e-6
+        @test maximum(abs.(H0 .+ reverse(H0))) ≤ 1e-5
+
+        # d change should result in numerical result change (basic sanity check)
+        H_big_d2 = OpenHilbertBenchmark.cal_Hlogrtf_nume(L0, point_density, 2)
+        @test length(H_big_d2) == length(H_big)
+        @test norm(H_big_d2 - H_big) > 0
+    end
+
+    @testset "MixedFunc + LogRationalFunc numerical approximation solution concatenation (non-log part + log numerical slice)" begin
+        T = Float64
+        L0 = T(2.0)
+        point_density = 8
+        h = T(1 / point_density)
+        N0 = round(Int, point_density * L0) * 2 + 1
+        x0 = T.((-N0 ÷ 2):(N0 ÷ 2)) .* h
+
+        # non-log part: select a component with closed-form (Schwartz d=2)
+        swf = SchwartzFunc(T; A=1.0, μ=0.0, σ=1.0, d=2)
+        mf_nonlog = MixedFunc(T; swf=swf, logrtf=nothing)
+        H_nonlog = [Hfunc(xi, mf_nonlog) for xi in x0]
+        @test length(H_nonlog) == N0
+        @test all(isfinite, H_nonlog)
+
+        # log part: use the center slice of cal_Hlogrtf_nume to align with x0
+        H_log_big = OpenHilbertBenchmark.cal_Hlogrtf_nume(L0, point_density, 1)
+        mid_log = length(H_log_big) ÷ 2 + 1
+        H_log0 = H_log_big[(mid_log - N0 ÷ 2):(mid_log + N0 ÷ 2)]
+        @test length(H_log0) == N0
+
+        # the concatenated solution should have the same length and be finite
+        H_ref = H_nonlog .+ H_log0
+        @test length(H_ref) == N0
+        @test all(isfinite, H_ref)
+    end
 end

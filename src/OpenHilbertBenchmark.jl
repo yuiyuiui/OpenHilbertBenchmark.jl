@@ -1,7 +1,7 @@
 module OpenHilbertBenchmark
 
 using OpenHilbert
-using Random, LinearAlgebra, SpecialFunctions
+using Random, LinearAlgebra, SpecialFunctions, HypergeometricFunctions
 using CairoMakie
 
 export origfunc, Hfunc

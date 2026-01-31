@@ -24,3 +24,8 @@ Test (vectors input) Open Hilbert transform algrorithm in OpenHilbert.jl
 |Oscillatory-Rational (k = 1, order > 1) + Schwartz|
 |Oscillatory-Rational (k > 1, order > 1) + Schwartz|
 |General $O(\frac{1}{x^p})\cap C^m$|
+
+# 3. To Do
+
+### 1. Add correctness test of hilbert transform by grid integral
+### 2. compaare with current algorithms

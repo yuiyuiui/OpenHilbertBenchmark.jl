@@ -1,39 +1,27 @@
-"""
-    LogRationalFunc{T<:Real}
+# d  means f(x) = x²/(x²+2)^{1+d/2}/ln(x²+2)
+struct LogRationalFunc{T<:Real} <: TestFunc{T}
+    d::Int
+end
 
-Placeholder for log-rational functions.
-TODO: Implement specific log-rational function and its Hilbert transform.
-"""
-struct LogRationalFunc{T<:Real} <: TestFunc{T} end
-
-function LogRationalFunc(T::Type{<:Real})
-    return LogRationalFunc{T}()
+function LogRationalFunc(T::Type{<:Real}=Float64; d::Int=1)
+    return LogRationalFunc{T}(d)
 end
 
 function origfunc(x::T, lrf::LogRationalFunc{T}) where {T<:Real}
-    return error("LogRationalFunc origfunc not yet implemented")
+    return x^T(2) / (x^T(2) + T(2))^(T(1) + lrf.d / T(2)) / log(x^T(2) + T(2))
 end
 
-function Hfunc(x::T, lrf::LogRationalFunc{T}) where {T<:Real}
-    return error("LogRationalFunc Hfunc not yet implemented")
+function Hfunc(x::T, lrf::LogRationalFunc{T})::T where {T<:Real}
+    return error("Hfunc for LogRationalFunc is not yet implemented")
 end
 
-"""
-    DRationdlFunc{T<:Real}
-
-Represents the function f(x) = 1/(1+x²)^a where a = d/2.
-Parameter d must be > 0 (so a > 0).
-
-The Hilbert transform is:
-- For 0 < a < 1/2: H[f](x) = x * (1+x²)^(-a) * tan(πa)
-- For a = 1/2:     H[f](x) = (2/π) * asinh(x) / √(1+x²)
-- For a > 1/2:     H[f](x) = x * (1+x²)^(-a) * Γ(a-1/2) / (√π * Γ(a))
-"""
+# f(x) = 1/(1+x²)^a where a = d/2
 struct DRationdlFunc{T<:Real} <: TestFunc{T}
     d::T
+    prefactor::T
     function DRationdlFunc{T}(d::T) where {T<:Real}
         @assert d > 0 "d must be > 0"
-        return new{T}(d)
+        return new{T}(d, T(2 / beta(d / 2, T(1 / 2))))
     end
 end
 
@@ -51,28 +39,7 @@ function origfunc(x::T, drf::DRationdlFunc{T}) where {T<:Real}
     return (1 + x^2)^(-a)
 end
 
-"""
-    Hfunc(x::T, drf::DRationdlFunc{T}) where {T<:Real}
-
-Compute the Hilbert transform H[1/(1+x²)^a](x) where a = d/2.
-
-- For 0 < a < 1/2: H[f](x) = x * (1+x²)^(-a) * tan(πa)
-- For a = 1/2:     H[f](x) = (2/π) * asinh(x) / √(1+x²)
-- For a > 1/2:     H[f](x) = x * (1+x²)^(-a) * Γ(a-1/2) / (√π * Γ(a))
-"""
 function Hfunc(x::T, drf::DRationdlFunc{T}) where {T<:Real}
     a = drf.d / 2
-    if isapprox(drf.d, one(T); atol=eps(T)*10)
-        # Special case: a = 1/2, d = 1
-        # H[1/√(1+x²)](x) = (2/π) * asinh(x) / √(1+x²)
-        return T(2/π) * asinh(x) / sqrt(1 + x^2)
-    elseif a < T(0.5)
-        # Case: 0 < a < 1/2
-        # H[(1+x²)^(-a)](x) = x * (1+x²)^(-a) * tan(πa)
-        return x * (1 + x^2)^(-a) * tanpi(a)
-    else
-        # Case: a > 1/2
-        # H[(1+x²)^(-a)](x) = x * (1+x²)^(-a) * Γ(a-1/2) / (√π * Γ(a))
-        return x * (1 + x^2)^(-a) * gamma(a - T(0.5)) / (sqrt(T(π)) * gamma(a))
-    end
+    return drf.prefactor * x * pFq((T(1), a + T(0.5)), (T(1.5),), -x^2)
 end
