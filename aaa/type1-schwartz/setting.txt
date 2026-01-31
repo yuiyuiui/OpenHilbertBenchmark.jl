@@ -1,0 +1,5 @@
+Used L0: [4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0, 2048.0, 4096.0, 8192.0, 16384.0, 32768.0]
+grid_gap: 0.06
+Points density: 16
+func_type: exp(-1.0 * abs((x - 0.0) / 1.0)^2)
+alg: AAA DeMode, max_degree=20 + FIR Trans

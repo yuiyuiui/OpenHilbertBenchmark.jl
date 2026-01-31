@@ -307,7 +307,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
 end
 
 function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
-    L = 200 * L0
+    L = 100 * L0
     N = round(Int, point_density * L) * 2 + 1
     h = T(1 / point_density)
     x = T.((-N ÷ 2):(N ÷ 2)) .* h

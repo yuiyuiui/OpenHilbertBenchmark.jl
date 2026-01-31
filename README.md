@@ -1,31 +1,33 @@
 Test (vectors input) Open Hilbert transform algrorithm in OpenHilbert.jl
 
 # 1. Accuracy test
-|Objects/Methods|FFT|FIR|ASY|AAA|
+|Points used $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
 |---|---|---|---|---|
-|Schwartz Function|✅|✅|✅|✅|✅|
-|Rantional Function (order = 1)||||✅|
-|Rational Function (order > 1)||||✅||
-|Rational (order > 1) + Schwartz|✅|✅|✅|✅|
-|Log-Rational (order > 1) + Schwartz|
-|d-Rational (order > 1) + Schwartz|
-|Oscillatory-Rational (k = 1, order > 1) + Schwartz|
-|Oscillatory-Rational (k > 1, order > 1) + Schwartz|
-|General $O(\frac{1}{x^p})\cap C^m$|
+|Type1: Schwartz Function|$10^6\sim10^{-5.5}$ | $10^2\sim10^{-16}$| $10^{2.5}\sim10^{-16}$|$10#\sim10^{-10}$ |
+|Type2: Rantional Function (order number = 1)|$10^6\sim10^{-4}$ | $10^6\sim10^{-4}$|$10^4\sim 10^{-15}$ |$10^6\sim10^{-5}$ |
+|Type3: Rational Function (order number > 1)|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^5\sim10^{-15.5}$ |$10^6\sim10^{-6.5}$ |
+|Type4: Rational (order number > 1) + Schwartz|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^5\sim10^{-15.5}$ |$10^{5.5}\sim10^{-11}$ |
+|Type5: Log-Rational |$10^6\sim10^{-5.5}$ | $10^6\sim10^{-5.5}$ |$10^6\sim10^{-10}$ |${10^{5.7}\sim10^{-6}$|
+|Type6: Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^6\sim10^{-10}$ |✅ |
+|Type7: d-Rational|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^2\sim10^{-15.5}$ |$10^{5.5}\sim10^{-2}$ |
+|Type8: d-Rational + Rational (order number = 1) + Schwartz|$10^6\sim10^{-2}$ |$10^6\sim10^{-2}$ | $10^{5.7}\sim10^{-11}$ |$10^{5.5}\sim10^{-2}$ |
+|Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{6.3}\sim10^{-10}$ |✅ |
 
 # 2. Speed test
-|Objects/Methods|FFT|FIR|ASY|AAA|NonUni|
-|---|---|---|---|---|---|
-|Rantional Function (order = 1)||||
-|Rational Function (order > 1)||||
-|Rational (order > 1) + Schwartz|
-|Log-Rational (order > 1) + Schwartz|
-|d-Rational (order > 1) + Schwartz|
-|Oscillatory-Rational (k = 1, order > 1) + Schwartz|
-|Oscillatory-Rational (k > 1, order > 1) + Schwartz|
-|General $O(\frac{1}{x^p})\cap C^m$|
+|Objects/Methods|FFT|FIR|ASY|AAA|
+|---|---|---|---|---|
+|Type1: Schwartz Function|
+|Type2: Rantional Function (order number = 1)|
+|Type3: Rational Function (order number > 1)|
+|Type4: Rational (order number > 1) + Schwartz|
+|Type5: Log-Rational |
+|Type6: Log-Rational + Rational (order number > 1) + Schwartz|
+|Type7: d-Rational|
+|Type8: d-Rational + Rational (order number = 1) + Schwartz|
+|Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|
 
 # 3. To Do
 
 ### 1. Add correctness test of hilbert transform by grid integral
-### 2. compaare with current algorithms
+### 2. Compaare with current algorithms
+### 3. Add a analytic calculated hilbert transform or a $O(1/x\ln x )$ function
