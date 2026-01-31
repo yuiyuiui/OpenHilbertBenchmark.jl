@@ -25,7 +25,8 @@ function get_funcname(func_type::RationalFuncPolesRepresent{T};
 end
 
 function get_funcname(func_type::DRationdlFunc{T}; details::Bool=false) where {T<:Real}
-    return "$(round(func_type.d, digits=2))-Rationdl"
+    !details && return "$(round(func_type.d, digits=2))-Rationdl"
+    return "1/(1 + x^2)^($(round(func_type.d/2, digits=2)))"
 end
 
 function get_funcname(func_type::LogRationalFunc; details::Bool=false)
@@ -103,7 +104,7 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                          trans::DiscreteTransMethod)
     title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
     title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
-    N_vec_str = ["10^$(round(log10(N), digits=2))" for N in N_vec]
+    N_vec_str = ["10^$(round(log10(N), digits=2))" for N in N_vec][1:2:end]
 
     fig1 = Figure(; size=(800, 600))
     Label(fig1[0, 1], title1; tellwidth=false)
@@ -131,7 +132,7 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                    rightspinevisible=false,
                    topspinevisible=true)
     linkxaxes!(ax1_top, ax1)
-    ax1_top.xticks = (L0_vec, N_vec_str)
+    ax1_top.xticks = (L0_vec[1:2:end], N_vec_str)
 
     axislegend(ax1)
 
@@ -162,7 +163,7 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                    rightspinevisible=false,
                    topspinevisible=true)
     linkxaxes!(ax2_top, ax2)
-    ax2_top.xticks = (L0_vec, N_vec_str)
+    ax2_top.xticks = (L0_vec[1:2:end], N_vec_str)
 
     axislegend(ax2)
     return fig1, fig2
