@@ -1,6 +1,9 @@
 Test (vectors input) Open Hilbert transform algrorithm in OpenHilbert.jl
 
 # 1. Accuracy test
+Points gap $h=2^{-5}\sim 2^{-4}$ 
+
+
 |Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
 |---|---|---|---|---|
 |Type1: Schwartz Function|$10^6\sim10^{-5.5}$ | $10^2\sim10^{-16}$| $10^{2.5}\sim10^{-16}$|$10^{5.7}\sim10^{-12}$ |
