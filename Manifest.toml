@@ -974,7 +974,7 @@ uuid = "18a262bb-aa17-5467-a713-aee519bc75cb"
 version = "3.4.4+0"
 
 [[deps.OpenHilbert]]
-deps = ["DSP", "FFTW", "FINUFFT", "LinearAlgebra", "SpecialFunctions"]
+deps = ["DSP", "FFTW", "FINUFFT", "HypergeometricFunctions", "LinearAlgebra", "SpecialFunctions"]
 path = "/Users/syyui/projects/OpenHilbert.jl"
 uuid = "ffa2f958-ad6d-465d-bd8d-590d6974d61f"
 version = "0.1.0"

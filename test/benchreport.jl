@@ -108,9 +108,9 @@
 
             content2 = read(setting_file, String)
             # With details=true, MixedFunc returns detailed expressions
-            # Check for components: SchwartzFunc details contain "exp", DRationdlFunc contains "Rationdl"
+            # Check for components: SchwartzFunc details contain "exp", DRationdlFunc contains "1/(1 + x^2)"
             @test occursin("exp", content2)  # SchwartzFunc detailed expression
-            @test occursin("Rationdl", content2)  # DRationdlFunc name
+            @test occursin("1/(1 + x^2)", content2)  # DRationdlFunc detailed expression
             @test occursin("func_type:", content2)
         finally
             # Cleanup

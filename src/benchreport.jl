@@ -54,7 +54,7 @@ function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod
     res = ""
     if !isnothing(dm)
         if dm isa OpenHilbert.AsymptoticDeMode
-            res *= "ASY DeMode, degree=$(dm.degree), mode length=$(dm.mode_length) + "
+            res *= "ASY DeMode, degree=$(dm.degree) + "
         elseif dm isa OpenHilbert.AAADeMode
             res *= "AAA DeMode, max_degree=$(dm.max_degree) + "
         end
@@ -237,7 +237,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         local dm1
         if dm isa AsymptoticDeMode
             dm1 = AsymptoticDeMode(; grid=x, degree=dm.degree, mode_length=dm.mode_length,
-                                   is_print=dm.is_print)
+                                   is_print=dm.is_print, d=dm.d)
         elseif dm isa AAADeMode
             dm1 = AAADeMode(; grid=x, max_degree=dm.max_degree, show_poles=dm.show_poles)
         else
@@ -307,7 +307,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
 end
 
 function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
-    L = 100 * L0
+    L = 200 * L0
     N = round(Int, point_density * L) * 2 + 1
     h = T(1 / point_density)
     x = T.((-N ÷ 2):(N ÷ 2)) .* h
