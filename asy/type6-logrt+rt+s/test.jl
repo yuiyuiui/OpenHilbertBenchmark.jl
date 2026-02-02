@@ -11,8 +11,8 @@ L0_start = 2^3
 L0_rate = 2
 test_num = 15
 point_density = 2^4
-mode_length = L0_start * L0_rate ^ (test_num - 1)/5
-dm = AsymptoticDeMode(; degree=10, mode_length=mode_length, d=1/2)
+mode_length_rate = 0.1
+dm = AsymptoticDeMode(mode_length_rate; degree=10, d=1/2)
 
 dir = "./asy/type6-logrt+rt+s"
 

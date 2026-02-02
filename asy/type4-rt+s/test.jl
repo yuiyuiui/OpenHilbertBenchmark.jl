@@ -10,8 +10,8 @@ L0_start = 2^3
 L0_rate = 2
 test_num = 14
 point_density = 2^5
-mode_length = 2
-dm = AsymptoticDeMode(; degree=10, mode_length=mode_length)
+mode_length_rate = 0.1
+dm = AsymptoticDeMode(mode_length_rate; degree=10)
 
 dir = "./asy/type4-rt+s"
 

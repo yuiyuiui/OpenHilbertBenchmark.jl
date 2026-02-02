@@ -54,7 +54,7 @@ function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod
     res = ""
     if !isnothing(dm)
         if dm isa OpenHilbert.AsymptoticDeMode
-            res *= "ASY DeMode, degree=$(dm.degree) + "
+            res *= "ASY DeMode, degree=$(dm.degree), mode_length_rate = $(dm.mode_length_rate) + "
         elseif dm isa OpenHilbert.AAADeMode
             res *= "AAA DeMode, max_degree=$(dm.max_degree) + "
         end
@@ -236,7 +236,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         local dm1
         if dm isa AsymptoticDeMode
-            dm1 = AsymptoticDeMode(; grid=x, degree=dm.degree, mode_length=dm.mode_length,
+            dm1 = AsymptoticDeMode(dm.mode_length_rate; grid=x, degree=dm.degree,
                                    is_print=dm.is_print, d=dm.d)
         elseif dm isa AAADeMode
             dm1 = AAADeMode(; grid=x, max_degree=dm.max_degree, show_poles=dm.show_poles)
