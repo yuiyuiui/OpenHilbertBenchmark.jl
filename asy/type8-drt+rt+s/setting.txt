@@ -1,5 +1,5 @@
 Used L0: [4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0, 2048.0, 4096.0, 8192.0, 16384.0, 32768.0, 65536.0, 131072.0]
-grid_gap: 0.06
-Points density: 16
+grid_gap: 0.03
+Points density: 32
 func_type: exp(-1.0 * abs((x - 0.0) / 1.0)^2) + real(0.33/(x - 0.56 - 1.12im)^1 + 0.33/(x - -0.62 - 1.02im)^1 + 0.33/(x - -0.5 - 0.55im)^2) + 1/(1 + x^2)^(0.25)
 alg: ASY DeMode, degree=10, mode_length_rate = 0.1 + FIR Trans

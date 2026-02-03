@@ -113,7 +113,9 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                ylabel="max error",
                title="",
                xscale=log10,
-               yscale=log10,)
+               yscale=log10,
+               yminorticksvisible=true,
+               yminorticks=IntervalsBetween(2))
 
     lines!(ax1, L0_vec, maxerr_herm_vec; label="Hermite")
     lines!(ax1, L0_vec, maxerr_hann_vec; label="Hann")
@@ -144,7 +146,9 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                ylabel="L2 relative error",
                title="",
                xscale=log10,
-               yscale=log10,)
+               yscale=log10,
+               yminorticksvisible=true,
+               yminorticks=IntervalsBetween(2))
 
     lines!(ax2, L0_vec, L2relerr_herm_vec; label="Hermite")
     lines!(ax2, L0_vec, L2relerr_hann_vec; label="Hann")
@@ -200,6 +204,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
     f0 = [origfunc(xi, func_type) for xi in x0]
     mid = N_vec[end] ÷ 2 + 1
 
+    println("Calculating exact Hilbert transform...")
     if func_type isa LogRationalFunc
         @warn("Hilbert transform of LogRationalFunc does not have a closed form, using numerical approximation")
         # cal_Hlogrtf_nume computes on a larger interval (internally uses L = 10*L0),
@@ -221,6 +226,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         H_exact0 = [Hfunc(xi, func_type) for xi in x0]
     end
 
+    println("Calculating Hilbert transform with numerical approximation...")
     m = length(L0_vec)
     maxerr_herm_vec = zeros(T, m)
     maxerr_hann_vec = zeros(T, m)

@@ -10,7 +10,7 @@ func_type = MixedFunc(T; swf=SchwartzFunc(T),
 L0_start = 2^2
 L0_rate = 2
 test_num = 16
-point_density = 2^4
+point_density = 2^5
 mode_length_rate = 0.1
 dm = AsymptoticDeMode(mode_length_rate; degree=10, d=0.5)
 
