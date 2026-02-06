@@ -23,3 +23,7 @@ end
 function Hfunc(x::T, swf::SchwartzFunc{T}) where {T<:Real}
     return 2 / T(sqrt(π)) * dawson(sqrt(swf.A) * (x - swf.μ) / swf.σ)
 end
+
+function Hfunc(x::Vector{T}, swf::SchwartzFunc{T}) where {T<:Real}
+    return [Hfunc(xi, swf) for xi in x]
+end

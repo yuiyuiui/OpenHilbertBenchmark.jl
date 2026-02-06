@@ -10,7 +10,7 @@ L0_rate = 2
 test_num = 14
 point_density = 2^4
 mode_length_rate = 0.1
-dm = AsymptoticDeMode(mode_length_rate; degree=5)
+dm = AsymptoticDeMode(; degree=5)
 
 dir = "./asy/type1-schwartz"
 

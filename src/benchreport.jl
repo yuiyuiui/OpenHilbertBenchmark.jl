@@ -25,8 +25,9 @@ function get_funcname(func_type::RationalFuncPolesRepresent{T};
 end
 
 function get_funcname(func_type::DRationdlFunc{T}; details::Bool=false) where {T<:Real}
-    !details && return "$(round(func_type.d, digits=2))-Rationdl"
-    return "1/(1 + x^2)^($(round(func_type.d/2, digits=2)))"
+    !details &&
+        return "$(length(func_type.even_order_vec)) orders even + $(length(func_type.odd_order_vec)) orders odd -Rationdl"
+    return "∑ 1/(1 + x^2)^(p/2) for p ∈($([round(p, digits=2) for p in func_type.even_order_vec])) + ∑ x/(1 + x^2)^((p+1)/2) for p ∈($([round(p, digits=2) for p in func_type.odd_order_vec]))"
 end
 
 function get_funcname(func_type::LogRationalFunc; details::Bool=false)
@@ -49,24 +50,41 @@ function get_funcname(func_type::MixedFunc{T}; details::Bool=false) where {T<:Re
     return res
 end
 
-function get_algname(dm::Union{DeModeMethod,Nothing}, pola::Union{PolationMethod,Nothing},
+function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,Nothing},
                      trans::Union{DiscreteTransMethod,Nothing})
     res = ""
-    if !isnothing(dm)
-        if dm isa OpenHilbert.AsymptoticDeMode
-            res *= "ASY DeMode, degree=$(dm.degree), mode_length_rate = $(dm.mode_length_rate) + "
-        elseif dm isa OpenHilbert.AAADeMode
-            res *= "AAA DeMode, max_degree=$(dm.max_degree) + "
+    if !isnothing(tdm)
+        if tdm isa TestNoDeMode
+            res *= "No DeMode + "
+        elseif tdm isa TestAsy
+            if tdm.mode_length_rate > 0
+                res *= "ASY DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
+            else # tdm.mode_length >= 0
+                res *= "ASY DeMode, mode_length = $(tdm.mode_length) + \n"
+            end
+        elseif tdm isa TestAAA
+            res *= "AAA DeMode, max_degree=$(tdm.max_degree) + \n"
+        elseif tdm isa TestLogLog
+            if tdm.mode_length_rate > 0
+                res *= "LogLog DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
+            else # tdm.mode_length >= 0
+                res *= "LogLog DeMode, mode_length = $(tdm.mode_length) + \n"
+            end
+        else
+            error("Unsupported TestDeMode: $tdm")
         end
     end
 
     if !isnothing(pola)
-        if pola isa OpenHilbert.NoPolation
-            res *= "No Polation + "
-        elseif pola isa OpenHilbert.InterPolation
-            res *= "Hann InterPolation + "
-        elseif pola isa OpenHilbert.ExtraPolation
-            res *= "Hermitian ExtraPolation + "
+        if pola.hann_length > 0
+            res *= "Hann Polation, length = $(pola.hann_length) + "
+        else # pola.hann_length >= 0
+            res *= "Hann Polation, length_rate = $(pola.hann_length_rate) + "
+        end
+        if pola.herm_length > 0
+            res *= "Hermitian Polation, length = $(pola.herm_length) + "
+        else # pola.herm_length >= 0
+            res *= "Hermitian Polation, length_rate = $(pola.herm_length_rate) + "
         end
     end
 
@@ -84,15 +102,15 @@ end
 function write_setting(func_type::TestFunc{T}, L0_vec::Vector{<:Real}, grid_gap::Real,
                        points_density::Int;
                        file_place::String=".",
-                       dm::Union{DeModeMethod,Nothing}=nothing,
-                       pola::Union{PolationMethod,Nothing}=nothing,
+                       tdm::Union{TestDeMode,Nothing}=nothing,
+                       pola::Union{TestPolation,Nothing}=nothing,
                        trans::Union{DiscreteTransMethod,Nothing}=nothing) where {T<:Real}
     open(joinpath(file_place, "setting.txt"), "w") do f
         write(f, "Used L0: $(round.(L0_vec, digits=2))\n")
         write(f, "grid_gap: $(round(grid_gap, digits=2))\n")
         write(f, "Points density: $(points_density)\n")
         write(f, "func_type: $(get_funcname(func_type; details=true))\n")
-        return write(f, "alg: $(get_algname(dm, pola, trans))\n")
+        return write(f, "alg: $(get_algname(tdm, pola, trans))\n")
     end
 end
 
@@ -100,10 +118,10 @@ end
 
 function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
                          L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
-                         func_type::TestFunc, dm::DeModeMethod,
+                         func_type::TestFunc, tdm::TestDeMode, pola::TestPolation,
                          trans::DiscreteTransMethod)
-    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
-    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(dm, nothing, trans))"
+    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, pola, trans))"
+    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, pola, trans))"
     N_vec_str = ["10^$(round(log10(N), digits=2))" for N in N_vec][1:2:end]
 
     fig1 = Figure(; size=(800, 600))
@@ -173,28 +191,10 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
     return fig1, fig2
 end
 
-struct PolationLength{T<:Real}
-    is_hann_length::Bool
-    hann_length::T
-    hann_length_rate::T
-    is_herm_length::Bool
-    herm_length::T
-    herm_length_rate::T
-end
-
-function PolationLength(::Type{T}; is_hann_length::Bool=false, hann_length::T=T(3),
-                        hann_length_rate::T=T(1 / 64), is_herm_length::Bool=true,
-                        herm_length::T=T(3), herm_length_rate::T=T(1 / 64)) where {T<:Real}
-    return PolationLength(is_hann_length, hann_length, hann_length_rate, is_herm_length,
-                          herm_length, herm_length_rate)
-end
-
-# The DeModeMethod `dm` here does not provide grid, so we need to generate it ourselves.
-function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
-                           trans::DiscreteTransMethod=FIRTrans(), L0_start::Real=2^2,
-                           L0_rate::Real=2, test_num::Int=14, point_density::Int=2^5,
-                           pola_len::PolationLength{T}=PolationLength(T),
-                           is_saveset::Bool=false, file_place::String=".") where {T<:Real}
+function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPolation,
+                           trans::DiscreteTransMethod, L0_start::Real,
+                           L0_rate::Real, test_num::Int, point_density::Int,
+                           is_saveset::Bool, file_place::String) where {T<:Real}
     @assert test_num >= 1
     @assert point_density >= 1
     h = T(1 / point_density)
@@ -223,7 +223,7 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         H_log0 = H_log[(mid_log - N_vec[end] ÷ 2):(mid_log + N_vec[end] ÷ 2)]
         H_exact0 .+= H_log0
     else
-        H_exact0 = [Hfunc(xi, func_type) for xi in x0]
+        H_exact0 = Hfunc(x0, func_type)
     end
 
     println("Calculating Hilbert transform with numerical approximation...")
@@ -240,35 +240,27 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         println("Running test $j of $m, L0 = $L0")
         N = N_vec[j]
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
-        local dm1
-        if dm isa AsymptoticDeMode
-            dm1 = AsymptoticDeMode(dm.mode_length_rate; grid=x, degree=dm.degree,
-                                   is_print=dm.is_print, d=dm.d)
-        elseif dm isa AAADeMode
-            dm1 = AAADeMode(; grid=x, max_degree=dm.max_degree, show_poles=dm.show_poles)
-        else
-            error("Unsupported DeModeMethod: $dm")
-        end
+        dm = test2demode(x, tdm)
 
         f = view(f0, (mid - N ÷ 2):(mid + N ÷ 2))
         H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
-        H_trunc = hilbert(f; dm=dm1, pola=NoPolation(), trans=trans)
+        H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
 
-        if pola_len.is_hann_length
-            δ = round(Int, pola_len.hann_length / h)
+        if pola.hann_length > 0
+            δ = round(Int, pola.hann_length / h)
         else
-            δ = round(Int, N * pola_len.herm_length_rate)
+            δ = round(Int, N * pola.hann_length_rate ÷ 2)
         end
 
-        if pola_len.is_herm_length
-            herm_n = round(Int, pola_len.herm_length / h)
+        if pola.herm_length > 0
+            herm_n = round(Int, pola.herm_length / h)
         else
-            herm_n = round(Int, N * pola_len.herm_length_rate)
+            herm_n = round(Int, N * pola.herm_length_rate ÷ 2)
         end
 
-        H_hann = hilbert(f; dm=dm1, pola=InterPolation(; δ=δ), trans=trans)
-        H_herm = hilbert(f; dm=dm1, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
+        H_hann = hilbert(f; dm=dm, pola=InterPolation(; δ=δ), trans=trans)
+        H_herm = hilbert(f; dm=dm, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
 
         dH_herm = abs.(H_herm - H_exact)
         dH_hann = abs.(H_hann - H_exact)
@@ -303,13 +295,14 @@ function loss_bench_report(func_type::TestFunc{T}, dm::DeModeMethod;
         @show L2relerr_hann_vec[j]
         @show L2relerr_trunc_vec[j]
     end
-    is_saveset && write_setting(func_type, L0_vec, h, point_density; dm=dm, trans=trans,
-                                file_place=file_place)
+    is_saveset &&
+        write_setting(func_type, L0_vec, h, point_density; tdm=tdm, pola=pola, trans=trans,
+                      file_place=file_place)
 
     return loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec,
                            maxerr_trunc_vec,
                            L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec,
-                           func_type, dm, trans)
+                           func_type, tdm, pola, trans)
 end
 
 function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
@@ -320,7 +313,7 @@ function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
     func(x) = x / (x^T(2) + T(2))^(T(1) + d / T(2)) / log(x^T(2) + T(2))
     f = [func(xi) for xi in x]
     # IMPORTANT: pass the grid so the transform matches the sampling step h.
-    dm = AsymptoticDeMode(; grid=x, degree=0)
+    dm = NoDeMode()
     Hf = hilbert(f; dm=dm, pola=NoPolation(), trans=FFTTrans(; pad_rate=0)) .* x
     return Hf
 end

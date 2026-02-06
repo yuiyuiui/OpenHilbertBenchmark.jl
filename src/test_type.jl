@@ -1,0 +1,112 @@
+abstract type TestDeMode end
+
+struct TestNoDeMode <: TestDeMode end
+
+function test2demode(grid::Vector{<:Real}, tdm::TestNoDeMode)
+    return NoDeMode()
+end
+
+struct TestAsy <: TestDeMode
+    mode_length::Real
+    mode_length_rate::Real
+    order_vec::Vector{<:Real}
+    is_print::Bool
+end
+
+function TestAsy(; degree::Int=2, mode_length_rate::Real=0, mode_length::Real=0,
+                 is_print::Bool=false, d::Real=1, order0::Real=0)
+    if mode_length > 0 && mode_length_rate > 0
+        error("mode_length and mode_length_rate cannot be both positive")
+    end
+    S = promote_type(typeof(d), typeof(order0))
+    order_vec = [S(order0 + k * d) for k in 1:degree]
+    return TestAsy(mode_length, mode_length_rate, order_vec, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testasy::TestAsy)
+    degree = length(testasy.order_vec)
+    local d, order0
+    if degree == 0
+        d = 0
+        order0 = 0
+    elseif degree == 1
+        d = testasy.order_vec[1]
+        order0 = 0
+    else
+        d = testasy.order_vec[2] - testasy.order_vec[1]
+        order0 = testasy.order_vec[1] - d
+    end
+    return AsymptoticDeMode(grid; degree=degree,
+                            mode_length=testasy.mode_length,
+                            mode_length_rate=testasy.mode_length_rate,
+                            is_print=testasy.is_print, d=d, order0=order0)
+end
+
+struct TestAAA <: TestDeMode
+    minsgl::Real
+    tol::Real
+    max_degree::Int
+    lookaheaad::Int
+    pcut::Function
+    show_poles::Bool
+end
+
+function TestAAA(; minsgl::Real=1e-12, tol::Real=1e-12,
+                 max_degree::Int=150,
+                 lookaheaad::Int=10, pcut::Function=(x -> !isnan(x) && imag(x) != 0),
+                 show_poles::Bool=false)
+    return TestAAA(minsgl, tol, max_degree, lookaheaad, pcut, show_poles)
+end
+
+function test2demode(grid::Vector{<:Real}, testaaa::TestAAA)
+    return AAADeMode(grid; minsgl=testaaa.minsgl, tol=testaaa.tol,
+                     max_degree=testaaa.max_degree,
+                     lookaheaad=testaaa.lookaheaad, pcut=testaaa.pcut,
+                     show_poles=testaaa.show_poles)
+end
+
+struct TestLogLog <: TestDeMode
+    mode_length::Real
+    mode_length_rate::Real
+    max_iter::Int
+    sign_detect_shorten_rate::Real
+    is_print::Bool
+end
+
+function TestLogLog(; mode_length_rate::Real=0, mode_length::Real=0,
+                    max_iter::Int=10, sign_detect_shorten_rate::Real=0.5,
+                    is_print::Bool=false)
+    if mode_length > 0 && mode_length_rate > 0
+        error("mode_length and mode_length_rate cannot be both positive")
+    end
+    return TestLogLog(mode_length, mode_length_rate, max_iter,
+                      sign_detect_shorten_rate, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testloglog::TestLogLog)
+    return LogLogDeMode(grid; mode_length=testloglog.mode_length,
+                        mode_length_rate=testloglog.mode_length_rate,
+                        max_iter=testloglog.max_iter,
+                        sign_detect_shorten_rate=testloglog.sign_detect_shorten_rate,
+                        is_print=testloglog.is_print)
+end
+
+# ======================== TestPolation ========================
+
+struct TestPolation
+    hann_length::Real
+    hann_length_rate::Real
+    herm_length::Real
+    herm_length_rate::Real
+end
+
+function TestPolation(; hann_length::Real=0, hann_length_rate::Real=0,
+                      herm_length::Real=0, herm_length_rate::Real=0)
+    if hann_length > 0 && hann_length_rate > 0
+        error("hann_length and hann_length_rate cannot be both positive")
+    end
+    if herm_length > 0 && herm_length_rate > 0
+        error("herm_length and herm_length_rate cannot be both positive")
+    end
+    return TestPolation(hann_length, hann_length_rate, herm_length, herm_length_rate)
+end

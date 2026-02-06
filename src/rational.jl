@@ -64,3 +64,7 @@ function Hfunc(x::T, rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
     end
     return real(res)
 end
+
+function Hfunc(x::Vector{T}, rtfpr::RationalFuncPolesRepresent{T}) where {T<:Real}
+    return [Hfunc(xi, rtfpr) for xi in x]
+end

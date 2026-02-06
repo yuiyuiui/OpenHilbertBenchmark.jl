@@ -1,107 +1,69 @@
 @testset "DRationdlFunc" begin
     @testset "Construction" begin
         # Test basic construction with Float64
-        drf = DRationdlFunc(Float64; d=0.5)
-        @test drf.d == 0.5
+        drf = DRationdlFunc([0.5], Float64[])
+        @test drf isa DRationdlFunc{Float64}
+        @test drf.even_order_vec isa Vector{Float64}
+        @test drf.odd_order_vec isa Vector{Float64}
+        @test drf.even_order_vec == [0.5]
+        @test drf.odd_order_vec == Float64[]
 
         # Test construction with Float32
-        drf32 = DRationdlFunc(Float32; d=0.5f0)
-        @test drf32.d isa Float32
-        @test drf32.d == 0.5f0
+        drf32 = DRationdlFunc([0.5f0], Float32[])
+        @test drf32 isa DRationdlFunc{Float32}
+        @test drf32.even_order_vec isa Vector{Float32}
+        @test drf32.odd_order_vec isa Vector{Float32}
+        @test drf32.even_order_vec == [0.5f0]
+        @test drf32.odd_order_vec == Float32[]
 
         # Test boundary values
-        drf_min = DRationdlFunc(Float64; d=0.01)
-        @test drf_min.d == 0.01
+        drf_min = DRationdlFunc([0.01], Float64[])
+        @test drf_min.even_order_vec == [0.01]
+        @test drf_min.odd_order_vec == Float64[]
 
-        drf_max = DRationdlFunc(Float64; d=1.0)
-        @test drf_max.d == 1.0
+        drf_max = DRationdlFunc([1.0], Float64[])
+        @test drf_max.even_order_vec == [1.0]
+        @test drf_max.odd_order_vec == Float64[]
 
         # Test large d values (a > 1/2)
-        drf_large = DRationdlFunc(Float64; d=2.0)
-        @test drf_large.d == 2.0
+        drf_large = DRationdlFunc([2.0], Float64[])
+        @test drf_large.even_order_vec == [2.0]
+        @test drf_large.odd_order_vec == Float64[]
 
-        drf_larger = DRationdlFunc(Float64; d=4.0)
-        @test drf_larger.d == 4.0
-
-        # Test assertion errors
-        @test_throws AssertionError DRationdlFunc(Float64; d=0.0)   # d must be > 0
-        @test_throws AssertionError DRationdlFunc(Float64; d=-0.5)  # d must be > 0
+        # Test mixed even and odd orders
+        drf_mixed = DRationdlFunc([1.0, 2.0], [0.5, 1.5])
+        @test length(drf_mixed.even_order_vec) == 2
+        @test length(drf_mixed.odd_order_vec) == 2
     end
 
     @testset "origfunc correctness" begin
         # Test d=0.5 case: f(x) = 1/(1+x²)^0.25
-        drf = DRationdlFunc(Float64; d=0.5)
+        drf = DRationdlFunc([0.5], Float64[])
         @test origfunc(0.0, drf) ≈ 1.0  # (1+0)^(-0.25) = 1
         @test origfunc(1.0, drf) ≈ 2.0^(-0.25)
         @test origfunc(-1.0, drf) ≈ 2.0^(-0.25)
         @test origfunc(2.0, drf) ≈ 5.0^(-0.25)
 
         # Test d=1.0 case: f(x) = 1/√(1+x²)
-        drf1 = DRationdlFunc(Float64; d=1.0)
+        drf1 = DRationdlFunc([1.0], Float64[])
         @test origfunc(0.0, drf1) ≈ 1.0
         @test origfunc(1.0, drf1) ≈ 1 / sqrt(2.0)
         @test origfunc(-1.0, drf1) ≈ 1 / sqrt(2.0)
         @test origfunc(3.0, drf1) ≈ 1 / sqrt(10.0)
 
         # Test d=2.0 case (a=1): f(x) = 1/(1+x²)
-        drf2 = DRationdlFunc(Float64; d=2.0)
+        drf2 = DRationdlFunc([2.0], Float64[])
         @test origfunc(0.0, drf2) ≈ 1.0
         @test origfunc(1.0, drf2) ≈ 0.5
         @test origfunc(2.0, drf2) ≈ 0.2
 
-        # Test general formula: f(x) = (1+x²)^(-d/2)
+        # Test general formula: f(x) = (1+x²)^(-d/2) for single even order
         for d in [0.1, 0.3, 0.7, 0.9, 1.5, 2.0, 3.0]
-            drf_test = DRationdlFunc(Float64; d=d)
+            drf_test = DRationdlFunc([d], Float64[])
             for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
                 expected = (1 + x^2)^(-d / 2)
                 @test origfunc(x, drf_test) ≈ expected
             end
-        end
-    end
-
-    @testset "Hfunc correctness" begin
-        # Test d=1.0 case (a=1/2): H[1/√(1+x²)](x) = (2/π) * asinh(x) / √(1+x²)
-        drf1 = DRationdlFunc(Float64; d=1.0)
-        @test Hfunc(0.0, drf1) ≈ 0.0 atol = 1e-14  # asinh(0) = 0
-        @test Hfunc(1.0, drf1) ≈ (2 / π) * asinh(1.0) / sqrt(2.0)
-        @test Hfunc(-1.0, drf1) ≈ (2 / π) * asinh(-1.0) / sqrt(2.0)
-        @test Hfunc(2.0, drf1) ≈ (2 / π) * asinh(2.0) / sqrt(5.0)
-
-        # Test d=2.0 case (a=1): H[1/(1+x²)](x) = x/(1+x²)
-        # This is a well-known result!
-        drf2 = DRationdlFunc(Float64; d=2.0)
-        @test Hfunc(0.0, drf2) ≈ 0.0 atol = 1e-14
-        @test Hfunc(1.0, drf2) ≈ 1.0 / 2.0
-        @test Hfunc(-1.0, drf2) ≈ -1.0 / 2.0
-        @test Hfunc(2.0, drf2) ≈ 2.0 / 5.0
-        @test Hfunc(3.0, drf2) ≈ 3.0 / 10.0
-
-        # Test case: 0 < a < 1/2
-        # H[(1+x²)^(-a)](x) = x * (1+x²)^(-a) * tan(πa)
-        for d in [0.1, 0.3, 0.5, 0.7, 0.9]
-            drf_test = DRationdlFunc(Float64; d=d)
-            a = d / 2
-            for x in [-2.0, -1.0, 0.5, 1.0, 2.0]
-                expected = x * (1 + x^2)^(-a) * tanpi(a)
-                @test Hfunc(x, drf_test) ≈ expected rtol = 1e-10
-            end
-        end
-
-        # Test case: a > 1/2
-        # H[(1+x²)^(-a)](x) = x * (1+x²)^(-a) * Γ(a-1/2) / (√π * Γ(a))
-        for d in [1.5, 2.0, 3.0, 4.0]
-            drf_test = DRationdlFunc(Float64; d=d)
-            a = d / 2
-            for x in [-2.0, -1.0, 0.5, 1.0, 2.0]
-                expected = x * (1 + x^2)^(-a) * gamma(a - 0.5) / (sqrt(π) * gamma(a))
-                @test Hfunc(x, drf_test) ≈ expected rtol = 1e-10
-            end
-        end
-
-        # Hfunc(0, drf) should be 0 for any d (odd function)
-        for d in [0.1, 0.5, 0.9, 1.0, 1.5, 2.0, 3.0]
-            drf_test = DRationdlFunc(Float64; d=d)
-            @test Hfunc(0.0, drf_test) ≈ 0.0 atol = 1e-14
         end
     end
 
@@ -133,14 +95,13 @@
         for a in a_vals
             for x in x_vals
                 val_num = hilbert_numerical(x, a)
-                val_cl = Hfunc(x, DRationdlFunc(T; d=2 * a))
+                val_cl = Hfunc(x, DRationdlFunc([2 * a], Float64[]))
                 val_ref = hilbert_classic(x, a)
 
-                @printf("x = %-5.2f | numerical = %+12.8e | closed = %+12.8e",
-                        x, val_num, val_cl)
+                println("x = $(x) | numerical = $(val_num) | closed = $(val_cl)")
 
                 if !isnan(val_ref)
-                    @printf(" | classic = %+12.8e", val_ref)
+                    println(" | classic = $(val_ref)")
                 end
 
                 # numerical vs closed form
@@ -155,12 +116,12 @@
     end
 
     @testset "Type stability" begin
-        drf64 = DRationdlFunc(Float64; d=0.5)
-        drf32 = DRationdlFunc(Float32; d=0.5f0)
-        drf64_1 = DRationdlFunc(Float64; d=1.0)
-        drf32_1 = DRationdlFunc(Float32; d=1.0f0)
-        drf64_2 = DRationdlFunc(Float64; d=2.0)  # a > 1/2
-        drf32_2 = DRationdlFunc(Float32; d=2.0f0)
+        drf64 = DRationdlFunc([0.5], Float64[])
+        drf32 = DRationdlFunc([0.5f0], Float32[])
+        drf64_1 = DRationdlFunc([1.0], Float64[])
+        drf32_1 = DRationdlFunc([1.0f0], Float32[])
+        drf64_2 = DRationdlFunc([2.0], Float64[])  # a > 1/2
+        drf32_2 = DRationdlFunc([2.0f0], Float32[])
 
         # Test origfunc type stability
         @test @inferred(origfunc(1.0, drf64)) isa Float64
@@ -184,131 +145,120 @@
     end
 
     @testset "Symmetry properties" begin
-        # origfunc should be even (symmetric) for all d
+        # origfunc should be even (symmetric) for single even order
         for d in [0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0]
-            drf = DRationdlFunc(Float64; d=d)
+            drf = DRationdlFunc([d], Float64[])
             for x in [0.5, 1.0, 2.0, 3.0]
                 @test origfunc(x, drf) ≈ origfunc(-x, drf)
             end
         end
 
-        # Hfunc should be odd (antisymmetric) for all d
+        # Hfunc should be odd (antisymmetric) for single even order
         for d in [0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0]
-            drf = DRationdlFunc(Float64; d=d)
+            drf = DRationdlFunc([d], Float64[])
             for x in [0.5, 1.0, 2.0, 3.0]
                 @test Hfunc(x, drf) ≈ -Hfunc(-x, drf)
             end
         end
     end
+end
 
-    @testset "Asymptotic behavior" begin
-        # For large |x|, origfunc should decay as |x|^(-d)
-        x_large = 100.0
+@testset "LogRationalFunc" begin
+    @testset "Construction" begin
+        # Test basic construction with Float64
+        lrf = LogRationalFunc(Float64; d=1)
+        @test lrf.d == 1
+        @test lrf isa LogRationalFunc{Float64}
 
-        for d in [0.5, 1.0, 2.0, 3.0]
-            drf = DRationdlFunc(Float64; d=d)
-            # (1 + x²)^(-d/2) ≈ x^(-d) for large x
-            @test origfunc(x_large, drf) ≈ x_large^(-d) rtol = 0.01
+        # Test construction with Float32
+        lrf32 = LogRationalFunc(Float32; d=1)
+        @test lrf32 isa LogRationalFunc{Float32}
+        @test lrf32.d == 1
+
+        # Test default construction (defaults to Float64, d=1)
+        lrf_default = LogRationalFunc()
+        @test lrf_default isa LogRationalFunc{Float64}
+        @test lrf_default.d == 1
+
+        # Test different d values
+        for d in [1, 2, 3, 5]
+            lrf_test = LogRationalFunc(Float64; d=d)
+            @test lrf_test.d == d
         end
-
-        # For large |x| with a < 1/2, Hfunc ≈ x^(1-d) * tan(πa)
-        drf = DRationdlFunc(Float64; d=0.5)
-        a = 0.25
-        @test Hfunc(x_large, drf) ≈ x_large^(1 - 0.5) * tanpi(a) rtol = 0.01
-
-        # For large |x| with a > 1/2, Hfunc ≈ x^(1-d) * Γ(a-1/2)/(√π*Γ(a))
-        drf2 = DRationdlFunc(Float64; d=2.0)
-        a2 = 1.0
-        coef = gamma(a2 - 0.5) / (sqrt(π) * gamma(a2))
-        @test Hfunc(x_large, drf2) ≈ x_large^(1 - 2.0) * coef rtol = 0.01
     end
 
-    @testset "Consistency checks" begin
-        # Check that Hfunc satisfies expected properties
+    @testset "origfunc correctness" begin
+        # f(x) = x² / (x² + 2)^(1 + d/2) / ln(x² + 2)
 
-        # For small x, Hfunc ≈ x * coefficient (to leading order)
-        drf = DRationdlFunc(Float64; d=0.5)
-        a = 0.25
-        x_small = 0.01
-        @test Hfunc(x_small, drf) ≈ x_small * tanpi(a) rtol = 0.01
+        # Test d=1 case
+        lrf = LogRationalFunc(Float64; d=1)
+        # At x=0: f(0) = 0 / (2)^(1.5) / ln(2) = 0
+        @test origfunc(0.0, lrf) ≈ 0.0 atol = 1e-15
 
-        # For a < 1/2: ratio Hfunc(x)/origfunc(x) = x*tan(πa)
-        for d in [0.2, 0.4, 0.6, 0.8]
-            drf_test = DRationdlFunc(Float64; d=d)
-            a_test = d / 2
-            for x in [0.5, 1.0, 2.0]
-                ratio = Hfunc(x, drf_test) / origfunc(x, drf_test)
-                expected_ratio = x * tanpi(a_test)
-                @test ratio ≈ expected_ratio rtol = 1e-10
+        # At x=1: f(1) = 1 / 3^(1.5) / ln(3)
+        @test origfunc(1.0, lrf) ≈ 1.0 / 3.0^1.5 / log(3.0)
+        @test origfunc(-1.0, lrf) ≈ 1.0 / 3.0^1.5 / log(3.0)
+
+        # At x=2: f(2) = 4 / 6^(1.5) / ln(6)
+        @test origfunc(2.0, lrf) ≈ 4.0 / 6.0^1.5 / log(6.0)
+
+        # Test d=2 case: f(x) = x² / (x² + 2)^2 / ln(x² + 2)
+        lrf2 = LogRationalFunc(Float64; d=2)
+        @test origfunc(0.0, lrf2) ≈ 0.0 atol = 1e-15
+        @test origfunc(1.0, lrf2) ≈ 1.0 / 9.0 / log(3.0)
+
+        # Test general formula: f(x) = x² / (x² + 2)^(1 + d/2) / ln(x² + 2)
+        for d in [1, 2, 3]
+            lrf_test = LogRationalFunc(Float64; d=d)
+            for x in [-2.0, -1.0, 0.0, 1.0, 2.0]
+                expected = x^2 / (x^2 + 2.0)^(1.0 + d / 2.0) / log(x^2 + 2.0)
+                @test origfunc(x, lrf_test) ≈ expected
+            end
+        end
+    end
+
+    @testset "Hfunc not implemented" begin
+        lrf = LogRationalFunc(Float64; d=1)
+        @test_throws ErrorException Hfunc(1.0, lrf)
+    end
+
+    @testset "Type stability" begin
+        lrf64 = LogRationalFunc(Float64; d=1)
+        lrf32 = LogRationalFunc(Float32; d=1)
+        lrf64_2 = LogRationalFunc(Float64; d=2)
+        lrf32_2 = LogRationalFunc(Float32; d=2)
+
+        # Test origfunc type stability
+        @test @inferred(origfunc(1.0, lrf64)) isa Float64
+        @test @inferred(origfunc(1.0f0, lrf32)) isa Float32
+        @test @inferred(origfunc(1.0, lrf64_2)) isa Float64
+        @test @inferred(origfunc(1.0f0, lrf32_2)) isa Float32
+    end
+
+    @testset "Symmetry properties" begin
+        # origfunc should be even (symmetric): f(x) = f(-x)
+        for d in [1, 2, 3]
+            lrf = LogRationalFunc(Float64; d=d)
+            for x in [0.5, 1.0, 2.0, 3.0]
+                @test origfunc(x, lrf) ≈ origfunc(-x, lrf)
             end
         end
 
-        # For a > 1/2: ratio Hfunc(x)/origfunc(x) = x*Γ(a-1/2)/(√π*Γ(a))
-        for d in [1.5, 2.0, 3.0, 4.0]
-            drf_test = DRationdlFunc(Float64; d=d)
-            a_test = d / 2
-            coef = gamma(a_test - 0.5) / (sqrt(π) * gamma(a_test))
-            for x in [0.5, 1.0, 2.0]
-                ratio = Hfunc(x, drf_test) / origfunc(x, drf_test)
-                expected_ratio = x * coef
-                @test ratio ≈ expected_ratio rtol = 1e-10
+        # origfunc should be non-negative for all x
+        for d in [1, 2, 3]
+            lrf = LogRationalFunc(Float64; d=d)
+            for x in [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+                @test origfunc(x, lrf) >= 0.0
             end
         end
-
-        # For d=1 (a=1/2), check the special formula
-        drf1 = DRationdlFunc(Float64; d=1.0)
-        for x in [0.5, 1.0, 2.0]
-            expected = (2 / π) * asinh(x) / sqrt(1 + x^2)
-            @test Hfunc(x, drf1) ≈ expected rtol = 1e-10
-        end
-
-        # Verify well-known result: H[1/(1+x²)](x) = x/(1+x²)
-        drf2 = DRationdlFunc(Float64; d=2.0)
-        for x in [0.5, 1.0, 2.0, 3.0]
-            @test Hfunc(x, drf2) ≈ x / (1 + x^2) rtol = 1e-10
-        end
     end
 
-    @testset "Limiting behavior" begin
-        # As d → 0, origfunc → 1 and Hfunc → 0 (approximately)
-        drf_small = DRationdlFunc(Float64; d=0.01)
-        @test origfunc(1.0, drf_small) ≈ 1.0 rtol = 0.01
-        @test abs(Hfunc(1.0, drf_small)) < 0.1  # small value
-
-        # As x → ∞, the ratio |Hfunc|/|origfunc| → |x * coefficient|
-        x_large = 1000.0
-
-        # Case a < 1/2
-        drf = DRationdlFunc(Float64; d=0.5)
-        a = 0.25
-        ratio = abs(Hfunc(x_large, drf) / origfunc(x_large, drf))
-        @test ratio ≈ abs(x_large * tanpi(a)) rtol = 0.001
-
-        # Case a > 1/2
-        drf2 = DRationdlFunc(Float64; d=2.0)
-        a2 = 1.0
-        coef = gamma(a2 - 0.5) / (sqrt(π) * gamma(a2))
-        ratio2 = abs(Hfunc(x_large, drf2) / origfunc(x_large, drf2))
-        @test ratio2 ≈ abs(x_large * coef) rtol = 0.001
-    end
-
-    @testset "Known special values" begin
-        # H[1/(1+x²)](x) = x/(1+x²) for a=1 (d=2)
-        drf_a1 = DRationdlFunc(Float64; d=2.0)
-        for x in [-3.0, -1.0, 0.5, 1.0, 2.0, 5.0]
-            @test Hfunc(x, drf_a1) ≈ x / (1 + x^2)
-        end
-
-        # H[1/(1+x²)²](x) = x(3+x²)/(2(1+x²)²) for a=2 (d=4)
-        # Coefficient: Γ(3/2)/(√π*Γ(2)) = (√π/2)/(√π*1) = 1/2
-        # So H = x * (1+x²)^(-2) * 1/2 ... but the actual formula should be verified
-        drf_a2 = DRationdlFunc(Float64; d=4.0)
-        a = 2.0
-        coef = gamma(a - 0.5) / (sqrt(π) * gamma(a))  # = Γ(1.5)/(√π*Γ(2)) = (√π/2)/(√π*1) = 0.5
-        @test coef ≈ 0.5
-        for x in [0.5, 1.0, 2.0]
-            expected = x * (1 + x^2)^(-2) * coef
-            @test Hfunc(x, drf_a2) ≈ expected
-        end
+    @testset "Decay behavior" begin
+        # f(x) should decay to 0 as |x| → ∞
+        lrf = LogRationalFunc(Float64; d=1)
+        vals = [origfunc(Float64(x), lrf) for x in [10, 100, 1000]]
+        # Each successive value should be smaller
+        @test vals[1] > vals[2] > vals[3]
+        @test vals[3] < 1e-4
     end
 end

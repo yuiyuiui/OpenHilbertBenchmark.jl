@@ -5,8 +5,8 @@ Points gap $h=2^{-5}\sim 2^{-4}$
 Function types explanation:
 
 - [1] Order of rational function: the maximum order of the poles
-- [2] Log-Rational function with : $O\left(1/|x|\ln |x|\right)$
-- [3] d-Rational function: $O\left(1/|x|^d\right)$
+- [2] Log-Rational function with : $\sim c_1/|x|\ln |x| + c_2 \text{sgn}(x)/|x|\ln|x|$
+- [3] d-Rational function: $\sim c_1/|x|^d + c_2\text{sgn}(x)/|x|^d$
 
 |Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
 |---|---|---|---|---|
@@ -19,6 +19,8 @@ Function types explanation:
 |Type7: d-Rational|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{2.7}\sim10^{-16}$ |$10^{5.5}\sim10^{-2}$ |
 |Type8: d-Rational + Rational (order number = 1) + Schwartz|$10^6\sim10^{-2}$ |$10^6\sim10^{-2}$ | $10^{5.7}\sim10^{-10.5}$ |$10^{5.5}\sim10^{-2}$ |
 |Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{6.3}\sim10^{-9.5}$ |$10^{5.7}\sim10^{-2}$ |
+|Type10: sum of d-Rational||||
+|Type11: sum of d-Rational + Log-Rational + Schwartz||||
 
 # 2. Speed test
 |Objects/Methods|FFT|FIR|ASY|AAA|
@@ -32,6 +34,8 @@ Function types explanation:
 |Type7: d-Rational|
 |Type8: d-Rational + Rational (order number = 1) + Schwartz|
 |Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|
+|Type10: sum of d-Rational||||
+|Type11: sum of d-Rational + Log-Rational + Schwartz||||
 
 # 3. To Do
 

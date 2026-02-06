@@ -10,7 +10,7 @@
         @test mf1.logrtf === nothing
 
         # Test construction with only DRationdlFunc
-        drf = DRationdlFunc(T; d=0.5)
+        drf = DRationdlFunc([T(0.5)], T[])
         mf2 = MixedFunc(T; drtf=drf)
         @test mf2.swf === nothing
         @test mf2.drtf === drf
@@ -33,7 +33,7 @@
         # Test that origfunc is additive
         T = Float64
         swf = SchwartzFunc(T; A=1.0, μ=0.0, σ=1.0, d=2)
-        drf = DRationdlFunc(T; d=0.5)
+        drf = DRationdlFunc([T(0.5)], T[])
 
         mf = MixedFunc(T; swf=swf, drtf=drf)
 
@@ -53,7 +53,7 @@
         # Test that Hfunc is additive (linearity of Hilbert transform)
         T = Float64
         swf = SchwartzFunc(T; A=1.0, μ=0.0, σ=1.0, d=2)
-        drf = DRationdlFunc(T; d=0.5)
+        drf = DRationdlFunc([T(0.5)], T[])
 
         mf = MixedFunc(T; swf=swf, drtf=drf)
 
@@ -91,7 +91,7 @@
         # If all components have symmetric origfunc, mixed should too
         T = Float64
         swf = SchwartzFunc(T; A=1.0, μ=0.0, σ=1.0, d=2)  # even
-        drf = DRationdlFunc(T; d=0.5)  # even
+        drf = DRationdlFunc([T(0.5)], T[])  # even
 
         mf = MixedFunc(T; swf=swf, drtf=drf)
 

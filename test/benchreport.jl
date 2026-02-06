@@ -32,20 +32,20 @@
     end
 
     @testset "get_funcname for DRationdlFunc" begin
-        drf = DRationdlFunc(Float64; d=0.5)
+        drf = DRationdlFunc([0.5], Float64[])
 
         name = get_funcname(drf)
         @test occursin("Rationdl", name)
-        @test occursin("0.5", name)
+        @test occursin("even", name)
 
-        drf2 = DRationdlFunc(Float64; d=2.0)
+        drf2 = DRationdlFunc([2.0], Float64[])
         name2 = get_funcname(drf2)
-        @test occursin("2.0", name2)
+        @test occursin("Rationdl", name2)
     end
 
     @testset "get_funcname for MixedFunc" begin
         swf = SchwartzFunc(Float64; A=1.0, μ=0.0, σ=1.0, d=2)
-        drf = DRationdlFunc(Float64; d=0.5)
+        drf = DRationdlFunc([0.5], Float64[])
 
         mf = MixedFunc(Float64; swf=swf, drtf=drf)
 
@@ -77,9 +77,9 @@
             grid_gap = 0.1
             points_density = 32
 
-            # Call write_setting with nothing for dm, pola, trans
+            # Call write_setting with nothing for tdm, pola, trans
             write_setting(swf, L0_vec, grid_gap, points_density;
-                          file_place=tmpdir, dm=nothing, pola=nothing, trans=nothing)
+                          file_place=tmpdir, tdm=nothing, pola=nothing, trans=nothing)
 
             # Check that file was created
             setting_file = joinpath(tmpdir, "setting.txt")
@@ -100,15 +100,14 @@
             @test occursin("alg:", content)
 
             # Test with MixedFunc
-            drf = DRationdlFunc(Float64; d=0.5)
+            drf = DRationdlFunc([0.5], Float64[])
             mf = MixedFunc(Float64; swf=swf, drtf=drf)
 
             write_setting(mf, L0_vec, grid_gap, points_density;
-                          file_place=tmpdir, dm=nothing, pola=nothing, trans=nothing)
+                          file_place=tmpdir, tdm=nothing, pola=nothing, trans=nothing)
 
             content2 = read(setting_file, String)
             # With details=true, MixedFunc returns detailed expressions
-            # Check for components: SchwartzFunc details contain "exp", DRationdlFunc contains "1/(1 + x^2)"
             @test occursin("exp", content2)  # SchwartzFunc detailed expression
             @test occursin("1/(1 + x^2)", content2)  # DRationdlFunc detailed expression
             @test occursin("func_type:", content2)

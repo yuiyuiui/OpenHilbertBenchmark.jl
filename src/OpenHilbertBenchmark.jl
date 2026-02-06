@@ -16,6 +16,7 @@ export hilbert
 
 abstract type TestFunc{T<:Real} end
 
+include("test_type.jl")
 include("schwartz.jl")
 include("rational.jl")
 include("rational_like.jl")
