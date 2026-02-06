@@ -36,31 +36,3 @@ for file in files_to_delete
         @warn "Failed to delete $file: $e"
     end
 end
-
-# Run all test.jl files
-println("\nRunning $(length(test_files)) test.jl files...")
-# Get the project root directory (where make_bench.jl is located)
-project_root = dirname(@__FILE__)
-for (idx, test_file) in enumerate(test_files)
-    println("\n[$(idx)/$(length(test_files))] Running: $test_file")
-    try
-        # Convert to absolute path and ensure directory exists
-        test_file_abs = abspath(project_root, test_file)
-        test_dir = dirname(test_file_abs)
-        mkpath(test_dir)  # Ensure directory exists for write_setting
-
-        # Run from project root to ensure relative paths work correctly
-        cd(project_root) do
-            return include(test_file_abs)
-        end
-        println("  ✓ Completed: $test_file")
-    catch e
-        @error "Failed to run $test_file: $e"
-        rethrow(e)
-    finally
-        # Force garbage collection to free memory between tests
-        GC.gc()
-    end
-end
-
-println("\n✓ All done!")

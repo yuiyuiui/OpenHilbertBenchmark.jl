@@ -3,14 +3,14 @@ using Random, CairoMakie
 
 Random.seed!(42)
 T = Float64
-func_type = DRationdlFunc([0.732], T[])
+func_type = DRationdlFunc([0.5], T[])
 
 L0_start = 2^2
 L0_rate = 2
-test_num = 16
+test_num = 14
 point_density = 2^4
 
-tdm = TestAsy(; mode_length_rate=1//10, degree=5, order0=1/3, d=1/3)
+tdm = TestAsy(; mode_length_rate=1//10, degree=12, order0=1/3, d=1/3)
 tp = TestPolation(; hann_length=3, herm_length_rate=1)
 trans = FIRTrans()
 
@@ -18,7 +18,9 @@ dir = "./asy/type7-drt"
 
 fig1, fig2 = loss_bench_report(func_type, tdm, tp, trans,
                                L0_start, L0_rate, test_num, point_density,
-                               true, dir)
+                               false, dir)
+display(fig1)
+display(fig2)
 
 save(joinpath(dir, "maxerr.svg"), fig1)
 save(joinpath(dir, "L2relerr.svg"), fig2)
