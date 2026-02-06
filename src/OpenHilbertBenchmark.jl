@@ -5,6 +5,8 @@ using Random, LinearAlgebra, SpecialFunctions, HypergeometricFunctions
 using CairoMakie
 
 export origfunc, Hfunc
+export TestFunc, TestDeMode, TestPolation
+export TestNoDeMode, TestAsy, TestAAA, TestLogLog
 export SchwartzFunc, RationalFuncPolesRepresent, DRationdlFunc, LogRationalFunc, MixedFunc
 export get_funcname, get_algname, write_setting, loss_bench_report
 
