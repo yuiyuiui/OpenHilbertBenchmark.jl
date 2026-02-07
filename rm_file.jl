@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate(".")
 
-dir0_vec = ["./aaa+fir/", "./asy+fir/", "./fir/", "./fft"]
+dir0_vec = ["./aaa/", "./asy/", "./fir/", "./fft", "./loglog", "./logasy"]
 
 # Collect all .txt and .svg files to delete
 files_to_delete = String[]

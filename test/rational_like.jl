@@ -93,9 +93,11 @@
         x_vals = [0.2, 1.0, 2.0, 5.0]
 
         for a in a_vals
-            for x in x_vals
+            val_cl_vec = Hfunc(x_vals, DRationdlFunc([2 * a], T[]))
+            for i in eachindex(x_vals)
+                x = x_vals[i]
                 val_num = hilbert_numerical(x, a)
-                val_cl = Hfunc(x, DRationdlFunc([2 * a], Float64[]))
+                val_cl = val_cl_vec[i]
                 val_ref = hilbert_classic(x, a)
 
                 println("x = $(x) | numerical = $(val_num) | closed = $(val_cl)")
@@ -105,6 +107,7 @@
                 end
 
                 # numerical vs closed form
+                @show abs(val_cl - val_num)
                 @test isapprox(val_cl, val_num; rtol=1e-6)
 
                 # when analytic solution is known
@@ -132,23 +135,24 @@
         @test @inferred(origfunc(1.0f0, drf32_2)) isa Float32
 
         # Test Hfunc type stability (case: 0 < a < 1/2)
-        @test @inferred(Hfunc(1.0, drf64)) isa Float64
-        @test @inferred(Hfunc(1.0f0, drf32)) isa Float32
+        @test @inferred(Hfunc([1.0], drf64)) isa Vector{Float64}
+        @test @inferred(Hfunc([1.0f0], drf32)) isa Vector{Float32}
 
         # Test Hfunc type stability (special case d=1, a=1/2)
-        @test @inferred(Hfunc(1.0, drf64_1)) isa Float64
-        @test @inferred(Hfunc(1.0f0, drf32_1)) isa Float32
+        @test @inferred(Hfunc([1.0], drf64_1)) isa Vector{Float64}
+        @test @inferred(Hfunc([1.0f0], drf32_1)) isa Vector{Float32}
 
         # Test Hfunc type stability (case: a > 1/2)
-        @test @inferred(Hfunc(1.0, drf64_2)) isa Float64
-        @test @inferred(Hfunc(1.0f0, drf32_2)) isa Float32
+        @test @inferred(Hfunc([1.0], drf64_2)) isa Vector{Float64}
+        @test @inferred(Hfunc([1.0f0], drf32_2)) isa Vector{Float32}
     end
 
     @testset "Symmetry properties" begin
+        mesh = [0.5, 1.0, 2.0, 3.0]
         # origfunc should be even (symmetric) for single even order
         for d in [0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0]
             drf = DRationdlFunc([d], Float64[])
-            for x in [0.5, 1.0, 2.0, 3.0]
+            for x in mesh
                 @test origfunc(x, drf) ≈ origfunc(-x, drf)
             end
         end
@@ -156,9 +160,7 @@
         # Hfunc should be odd (antisymmetric) for single even order
         for d in [0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0]
             drf = DRationdlFunc([d], Float64[])
-            for x in [0.5, 1.0, 2.0, 3.0]
-                @test Hfunc(x, drf) ≈ -Hfunc(-x, drf)
-            end
+            @test Hfunc(mesh, drf) ≈ -Hfunc(-mesh, drf)
         end
     end
 end

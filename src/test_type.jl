@@ -91,6 +91,35 @@ function test2demode(grid::Vector{<:Real}, testloglog::TestLogLog)
                         is_print=testloglog.is_print)
 end
 
+struct TestLogAsy <: TestDeMode
+    mode_length::Real
+    mode_length_rate::Real
+    order1_scale::Real
+    d::Real
+    degree::Int
+    sign_detect_shorten_rate::Real
+    is_print::Bool
+end
+
+function TestLogAsy(; mode_length_rate::Real=0, mode_length::Real=0,
+                    order1_scale::Real=0, d::Real=1 / 3,
+                    degree::Int=9, sign_detect_shorten_rate::Real=0.9, is_print::Bool=false)
+    if mode_length > 0 && mode_length_rate > 0
+        error("mode_length and mode_length_rate cannot be both positive")
+    end
+    return TestLogAsy(mode_length, mode_length_rate, order1_scale, d, degree,
+                      sign_detect_shorten_rate, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testlogasy::TestLogAsy)
+    return LogAsyDeMode(grid; mode_length=testlogasy.mode_length,
+                        mode_length_rate=testlogasy.mode_length_rate,
+                        order1_scale=testlogasy.order1_scale, d=testlogasy.d,
+                        degree=testlogasy.degree,
+                        sign_detect_shorten_rate=testlogasy.sign_detect_shorten_rate,
+                        is_print=testlogasy.is_print)
+end
+
 # ======================== TestPolation ========================
 
 struct TestPolation

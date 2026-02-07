@@ -73,6 +73,12 @@ function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,No
             else # tdm.mode_length >= 0
                 res *= "LogLog DeMode, mode_length = $(tdm.mode_length) + \n"
             end
+        elseif tdm isa TestLogAsy
+            if tdm.mode_length_rate > 0
+                res *= "LogAsy DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
+            else # tdm.mode_length >= 0
+                res *= "LogAsy DeMode, mode_length = $(tdm.mode_length) + \n"
+            end
         else
             error("Unsupported TestDeMode: $tdm")
         end
