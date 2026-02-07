@@ -9,13 +9,15 @@ L0_start = 2^2
 L0_rate = 2
 test_num = 13
 point_density = 2^4
-dm = AAADeMode(; max_degree=30)
+tdm = TestAAA(; max_degree=30)
+tp = TestPolation(; hann_length=3, herm_length_rate=1)
+trans = FIRTrans()
 
 dir = "./aaa/type2-rt_1"
 
-fig1, fig2 = loss_bench_report(func_type, dm; trans=FIRTrans(), L0_start=L0_start,
-                               L0_rate=L0_rate, test_num=test_num,
-                               point_density=point_density, is_saveset=true, file_place=dir)
+fig1, fig2 = loss_bench_report(func_type, tdm, tp, trans,
+                               L0_start, L0_rate, test_num, point_density,
+                               true, dir)
 
 save(joinpath(dir, "maxerr.svg"), fig1)
 save(joinpath(dir, "L2relerr.svg"), fig2)

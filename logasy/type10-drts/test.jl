@@ -19,7 +19,7 @@ L0_rate = 2
 test_num = 16
 point_density = 8
 
-tdm = TestLogAsy(; mode_length_rate=1//5, degree=12, d=1/6, order1_scale=0, is_print=true)
+tdm = TestLogAsy(; mode_length_rate=1//5, degree=12, d=1/6, is_print=true)
 tp = TestPolation(; hann_length=3, herm_length_rate=1)
 trans = FIRTrans()
 
