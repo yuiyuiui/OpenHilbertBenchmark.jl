@@ -14,7 +14,7 @@ tdm = TestLogLog(; mode_length=200, max_iter=100, is_print=true)
 tp = TestPolation(; hann_length=3, herm_length_rate=1)
 trans = FIRTrans()
 
-dir = "./loglog/type7-drt"
+dir = "./logasy/type7-drt"
 
 fig1, fig2 = loss_bench_report(func_type, tdm, tp, trans,
                                L0_start, L0_rate, test_num, point_density,

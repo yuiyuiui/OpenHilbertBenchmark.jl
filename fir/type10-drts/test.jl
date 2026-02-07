@@ -19,11 +19,11 @@ L0_rate = 2
 test_num = 16
 point_density = 2^4
 
-tdm = TestAsy(; mode_length_rate=1//10, degree=12, order0=1/3, d=1/3)
+tdm = TestNoDeMode()
 tp = TestPolation(; hann_length=3, herm_length_rate=1)
 trans = FIRTrans()
 
-dir = "./asy/type10-drts"
+dir = "./fir/type10-drts"
 
 fig1, fig2 = loss_bench_report(func_type, tdm, tp, trans,
                                L0_start, L0_rate, test_num, point_density,

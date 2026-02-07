@@ -8,8 +8,8 @@ Function types explanation:
 - [2] Log-Rational function with : $\sim c_1/|x|\ln |x| + c_2 \text{sgn}(x)/|x|\ln|x|$
 - [3] d-Rational function: $\sim c_1/|x|^d + c_2\text{sgn}(x)/|x|^d$
 
-|Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|
-|---|---|---|---|---|
+|Number of Points $\sim$ accuracy (max error)|FFT|FIR|ASY|AAA|LogLog|LogAsy|
+|---|---|---|---|---|---|---|
 |Type1: Schwartz Function|$10^6\sim10^{-5.5}$ | $10^2\sim10^{-16}$| $10^{2.5}\sim10^{-16}$|$10^{5.7}\sim10^{-12}$ |
 |Type2: Rantional Function (order number = 1)|$10^6\sim10^{-4}$ | $10^6\sim10^{-4}$|$10^4\sim 10^{-15}$ |$10^6\sim10^{-5}$ |
 |Type3: Rational Function (order number > 1)|$10^6\sim10^{-4.5}$ | $10^6\sim10^{-4.5}$ |$10^{4.5}\sim10^{-15}$ |$10^6\sim10^{-6.5}$ |
@@ -19,7 +19,7 @@ Function types explanation:
 |Type7: d-Rational|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{2.7}\sim10^{-16}$ |$10^{5.5}\sim10^{-2}$ |
 |Type8: d-Rational + Rational (order number = 1) + Schwartz|$10^6\sim10^{-2}$ |$10^6\sim10^{-2}$ | $10^{5.7}\sim10^{-10.5}$ |$10^{5.5}\sim10^{-2}$ |
 |Type9: d-Rational + Log-Rational + Rational (order number > 1) + Schwartz|$10^6\sim10^{-2}$ | $10^6\sim10^{-2}$ |$10^{6.3}\sim10^{-9.5}$ |$10^{5.7}\sim10^{-2}$ |
-|Type10: sum of d-Rational||||
+|Type10: sum of d-Rational||$10^{6.3}\sim10^{-4.5}$|$10^{6.3}\sim10^{-6}$||$10^{-6.3}\sim10^{-7.5}$|$10^{6.3}\sim10^{-9}$|
 |Type11: sum of d-Rational + Log-Rational + Schwartz||||
 
 # 2. Speed test

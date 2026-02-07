@@ -3,14 +3,23 @@ using Random, CairoMakie
 
 Random.seed!(42)
 T = Float64
-func_type = DRationdlFunc([0.5, 0.9, 1.7], [0.7, 1.2, 3.8])
+norder = 3
+even_order_vec = 1 // 2 * rand(T, norder) + 1 // 2 * [1, 2, 3]
+odd_order_vec = 1 // 2 * rand(T, norder) + 1 // 2 * [1, 2, 3]
+even_shift_vec = randn(T, norder)
+odd_shift_vec = randn(T, norder)
+even_σ_vec = rand(T, norder) .+ 1
+odd_σ_vec = rand(T, norder) .+ 1
+func_type = DRationdlFunc(even_order_vec, odd_order_vec;
+                          even_shift_vec=even_shift_vec, odd_shift_vec=odd_shift_vec,
+                          even_σ_vec=even_σ_vec, odd_σ_vec=odd_σ_vec)
 
 L0_start = 2^2
 L0_rate = 2
 test_num = 16
 point_density = 2^4
 
-tdm = TestLogLog(; mode_length=10, max_iter=100)
+tdm = TestLogLog(; mode_length=1//10)
 tp = TestPolation(; hann_length=3, herm_length_rate=1)
 trans = FIRTrans()
 
