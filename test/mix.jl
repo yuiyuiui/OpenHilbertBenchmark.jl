@@ -57,16 +57,16 @@
 
         mf = MixedFunc(T; swf=swf, drtf=drf)
 
-        for x in [-2.0, -1.0, 0.5, 1.0, 2.0]
-            expected = Hfunc(x, swf) + Hfunc(x, drf)
-            @test Hfunc(x, mf) ≈ expected
-        end
+        mesh1 = [-2.0, -1.0, 0.5, 1.0, 2.0]
+
+        expected = Hfunc(mesh1, swf) + Hfunc(mesh1, drf)
+        @test Hfunc(mesh1, mf) ≈ expected
 
         # Test with single component
         mf_single = MixedFunc(T; drtf=drf)
-        for x in [-1.0, 0.5, 1.0]
-            @test Hfunc(x, mf_single) ≈ Hfunc(x, drf)
-        end
+        mesh2 = [-1.0, 0.5, 1.0]
+        expected = Hfunc(mesh2, drf)
+        @test Hfunc(mesh2, mf_single) ≈ expected
     end
 
     @testset "Type stability" begin
@@ -96,14 +96,13 @@
         mf = MixedFunc(T; swf=swf, drtf=drf)
 
         # origfunc should be even
+        mesh = [0.5, 1.0, 2.0]
         for x in [0.5, 1.0, 2.0]
             @test origfunc(x, mf) ≈ origfunc(-x, mf)
         end
 
         # Hfunc should be odd
-        for x in [0.5, 1.0, 2.0]
-            @test Hfunc(x, mf) ≈ -Hfunc(-x, mf)
-        end
+        @test Hfunc(mesh, mf) ≈ -Hfunc(-mesh, mf)
     end
 
     @testset "Empty MixedFunc" begin
@@ -113,7 +112,7 @@
 
         # Should return 0 for both functions
         @test origfunc(1.0, mf_empty) ≈ T(0)
-        @test Hfunc(1.0, mf_empty) ≈ T(0)
+        @test Hfunc([1.0], mf_empty) ≈ [T(0)]
     end
 
     @testset "With RationalFuncPolesRepresent" begin
@@ -132,7 +131,7 @@
             expected_orig = origfunc(x, swf) + origfunc(x, rtfpr)
             expected_H = Hfunc(x, swf) + Hfunc(x, rtfpr)
             @test origfunc(x, mf) ≈ expected_orig
-            @test Hfunc(x, mf) ≈ expected_H
+            @test Hfunc([x], mf)[1] ≈ expected_H
         end
     end
 end

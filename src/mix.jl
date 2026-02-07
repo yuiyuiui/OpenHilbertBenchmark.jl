@@ -45,3 +45,20 @@ function Hfunc(x::T, mf::MixedFunc{T}) where {T<:Real}
     end
     return res
 end
+
+function Hfunc(x::Vector{T}, mf::MixedFunc{T}) where {T<:Real}
+    res = zero(x)
+    if mf.swf !== nothing
+        res += Hfunc(x, mf.swf)
+    end
+    if mf.rtfpr !== nothing
+        res += Hfunc(x, mf.rtfpr)
+    end
+    if mf.drtf !== nothing
+        res += Hfunc(x, mf.drtf)
+    end
+    if mf.logrtf !== nothing
+        res += Hfunc(x, mf.logrtf)
+    end
+    return res
+end

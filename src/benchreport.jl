@@ -223,7 +223,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
         func_type_log = MixedFunc(T; swf=func_type.swf, rtfpr=func_type.rtfpr,
                                   drtf=func_type.drtf,
                                   logrtf=nothing)
-        H_exact0 = [Hfunc(xi, func_type_log) for xi in x0]
+        H_exact0 = Hfunc(x0, func_type_log)
         H_log = cal_Hlogrtf_nume(L0_vec[end], point_density, func_type.logrtf.d)
         mid_log = length(H_log) ÷ 2 + 1
         H_log0 = H_log[(mid_log - N_vec[end] ÷ 2):(mid_log + N_vec[end] ÷ 2)]
