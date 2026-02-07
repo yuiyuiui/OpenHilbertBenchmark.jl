@@ -3,11 +3,14 @@ using Random, CairoMakie
 
 Random.seed!(42)
 T = Float64
-func_type = DRationdlFunc([0.5, 0.9, 1.7], T[])
+even_shift_vec = T.([1.0, 2.0, 3.0])
+even_σ_vec = T.([4.0, 5.0, 6.0])
+func_type = DRationdlFunc(T.([0.5, 0.9, 1.7]), T[];
+                          even_shift_vec=even_shift_vec, even_σ_vec=even_σ_vec)
 
 L0_start = 2^2
 L0_rate = 2
-test_num = 16
+test_num = 14
 point_density = 2^4
 
 tdm = TestAsy(; mode_length_rate=1//10, degree=12, order0=1/3, d=1/3)
