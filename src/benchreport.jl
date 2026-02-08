@@ -54,33 +54,34 @@ function get_funcname(func_type::MixedFunc{T}; details::Bool=false) where {T<:Re
 end
 
 function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,Nothing},
-                     trans::Union{DiscreteTransMethod,Nothing})
+                     trans::Union{DiscreteTransMethod,Nothing}; details::Bool=false)
     res = ""
     if !isnothing(tdm)
         if tdm isa TestNoDeMode
-            res *= "No DeMode + "
+            details && (res *= "No DeMode + ")
         elseif tdm isa TestAsy
-            if tdm.mode_length_rate > 0
-                res *= "ASY DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
-            else # tdm.mode_length >= 0
-                res *= "ASY DeMode, mode_length = $(tdm.mode_length) + \n"
-            end
+            details &&
+                (res *= "ASY DeMode order_vec=$([round(order, digits=2) for order in tdm.order_vec]), ")
         elseif tdm isa TestAAA
-            res *= "AAA DeMode, max_degree=$(tdm.max_degree) + \n"
+            res *= "AAA DeMode, max_degree=$(tdm.max_degree), "
         elseif tdm isa TestLogLog
-            if tdm.mode_length_rate > 0
-                res *= "LogLog DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
-            else # tdm.mode_length >= 0
-                res *= "LogLog DeMode, mode_length = $(tdm.mode_length) + \n"
-            end
+            details && (res *= "LogLog DeMode")
         elseif tdm isa TestLogAsy
-            if tdm.mode_length_rate > 0
-                res *= "LogAsy DeMode, mode_length_rate = $(tdm.mode_length_rate) + \n"
-            else # tdm.mode_length >= 0
-                res *= "LogAsy DeMode, mode_length = $(tdm.mode_length) + \n"
-            end
+            details &&
+                (res *= "LogAsy DeMode order1_scale=$(tdm.order1_scale), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
+        elseif tdm isa TestLSQAsy
+            details &&
+                (res *= "LSQAsy DeMode, for LsqFit, nneed=$(tdm.nneed), nseek=$(tdm.nseek), start_gap=$(tdm.start_gap), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
         else
             error("Unsupported TestDeMode: $tdm")
+        end
+
+        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA)
+            if tdm.mode_length_rate > 0
+                res *= "mode_length_rate = $(tdm.mode_length_rate) + \n"
+            else # tdm.mode_length >= 0
+                res *= "mode_length = $(tdm.mode_length) + \n"
+            end
         end
     end
 

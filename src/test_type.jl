@@ -120,6 +120,37 @@ function test2demode(grid::Vector{<:Real}, testlogasy::TestLogAsy)
                         is_print=testlogasy.is_print)
 end
 
+struct TestLSQAsy <: TestDeMode
+    mode_length::Real
+    mode_length_rate::Real
+    sign_detect_shorten_rate::Real
+    nneed::Int
+    nseek::Int
+    start_gap::Real
+    d::Real
+    degree::Int
+    is_print::Bool
+end
+
+function TestLSQAsy(; mode_length_rate::Real=0, mode_length::Real=0,
+                    sign_detect_shorten_rate::Real=0.9, nneed::Int=2, nseek::Int=4,
+                    start_gap::Real=1 / 3, d::Real=1 / 3, degree::Int=6,
+                    is_print::Bool=false)
+    if mode_length > 0 && mode_length_rate > 0
+        error("mode_length and mode_length_rate cannot be both positive")
+    end
+    return TestLSQAsy(mode_length, mode_length_rate, sign_detect_shorten_rate, nneed, nseek,
+                      start_gap, d, degree, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testlsqasy::TestLSQAsy)
+    return LSQAsyDeMode(grid; mode_length=testlsqasy.mode_length,
+                        mode_length_rate=testlsqasy.mode_length_rate,
+                        sign_detect_shorten_rate=testlsqasy.sign_detect_shorten_rate,
+                        nneed=testlsqasy.nneed, nseek=testlsqasy.nseek,
+                        start_gap=testlsqasy.start_gap, d=testlsqasy.d,
+                        degree=testlsqasy.degree, is_print=testlsqasy.is_print)
+end
 # ======================== TestPolation ========================
 
 struct TestPolation
