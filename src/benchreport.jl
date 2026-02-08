@@ -69,9 +69,9 @@ function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,No
         elseif tdm isa TestLogAsy
             details &&
                 (res *= "LogAsy DeMode order1_scale=$(tdm.order1_scale), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
-        elseif tdm isa TestLSQAsy
+        elseif tdm isa TestLsqAsy
             details &&
-                (res *= "LSQAsy DeMode, for LsqFit, nneed=$(tdm.nneed), nseek=$(tdm.nseek), start_gap=$(tdm.start_gap), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
+                (res *= "LsqAsy DeMode, for LsqFit, nseek=$(tdm.nseek), start_gap=$(tdm.start_gap), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
         else
             error("Unsupported TestDeMode: $tdm")
         end
