@@ -58,29 +58,43 @@ function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,No
     res = ""
     if !isnothing(tdm)
         if tdm isa TestNoDeMode
-            details && (res *= "No DeMode + ")
+            res *= "No DeMode + "
         elseif tdm isa TestAsy
+            res *= "ASY DeMode + "
             details &&
                 (res *= "ASY DeMode order_vec=$([round(order, digits=2) for order in tdm.order_vec]), ")
         elseif tdm isa TestAAA
             res *= "AAA DeMode, max_degree=$(tdm.max_degree), "
         elseif tdm isa TestLogLog
+            res *= "LogLog DeMode + "
             details && (res *= "LogLog DeMode")
         elseif tdm isa TestLogAsy
+            res *= "LogAsy DeMode + "
             details &&
                 (res *= "LogAsy DeMode order1_scale=$(tdm.order1_scale), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
         elseif tdm isa TestLsqAsy
+            res *= "LsqAsy DeMode + "
             details &&
                 (res *= "LsqAsy DeMode, for LsqFit, nseek=$(tdm.nseek), start_gap=$(tdm.start_gap), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
+        elseif tdm isa TestVarLog
+            res *= "VarLog DeMode + "
+            details &&
+                (res *= "VarLog DeMode, length expand rate=$(tdm.rate), pad_rate=$(tdm.pad_rate), max_deg=$(tdm.max_deg), ")
         else
             error("Unsupported TestDeMode: $tdm")
         end
 
-        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA)
+        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA) && !isa(tdm, TestVarLog)
             if tdm.mode_length_rate > 0
-                res *= "mode_length_rate = $(tdm.mode_length_rate) + \n"
+                res *= "length_rate = $(tdm.mode_length_rate) + \n"
             else # tdm.mode_length >= 0
-                res *= "mode_length = $(tdm.mode_length) + \n"
+                res *= "length = $(tdm.mode_length) + \n"
+            end
+        elseif tdm isa TestVarLog
+            if tdm.start_length_rate > 0
+                res *= "length_rate = $(tdm.start_length_rate) + \n"
+            else # tdm.start_length >= 0
+                res *= "length = $(tdm.start_length) + \n"
             end
         end
     end
@@ -244,7 +258,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
 
     for j in 1:m
         L0 = L0_vec[j]
-        println("Running test $j of $m, L0 = $L0")
+        println("Running test $j of $m, L0 = $L0 \n ================================================================ \n\n\n")
         N = N_vec[j]
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         dm = test2demode(x, tdm)
@@ -252,6 +266,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
         f = view(f0, (mid - N ÷ 2):(mid + N ÷ 2))
         H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
+        println("beigin NoPolation")
         H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
 
         if pola.hann_length > 0
@@ -266,7 +281,9 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
             herm_n = round(Int, N * pola.herm_length_rate ÷ 2)
         end
 
+        println("beigin InterPolation")
         H_hann = hilbert(f; dm=dm, pola=InterPolation(; δ=δ), trans=trans)
+        println("beigin ExtraPolation")
         H_herm = hilbert(f; dm=dm, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
 
         dH_herm = abs.(H_herm - H_exact)

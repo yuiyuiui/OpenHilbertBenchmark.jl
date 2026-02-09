@@ -152,6 +152,39 @@ function test2demode(grid::Vector{<:Real}, testlsqasy::TestLsqAsy)
                         start_gap=testlsqasy.start_gap, d=testlsqasy.d,
                         degree=testlsqasy.degree, is_print=testlsqasy.is_print)
 end
+
+struct TestVarLog <: TestDeMode
+    start_length_rate::Real
+    start_length::Real
+    rate::Real
+    max_iter::Int
+    max_deg::Real
+    pad_rate::Int
+    sign_detect_shorten_rate::Real
+    is_print::Bool
+end
+
+function TestVarLog(; start_length_rate::Real=0, start_length::Real=0,
+                    rate::Real=3, max_iter::Int=10, max_deg::Real=4, pad_rate::Int=2,
+                    sign_detect_shorten_rate::Real=0.9, is_print::Bool=false)
+    if start_length > 0 && start_length_rate > 0
+        error("start_length and start_length_rate cannot be both positive")
+    end
+    @assert rate > 1 "rate must be greater than 1"
+    @assert sign_detect_shorten_rate > 0 && sign_detect_shorten_rate <= 1 "sign_detect_shorten_rate must be greater than 0 and less than 1"
+    return TestVarLog(start_length_rate, start_length, rate, max_iter, max_deg, pad_rate,
+                      sign_detect_shorten_rate, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testvarlog::TestVarLog)
+    return VarLogDeMode(grid; start_length_rate=testvarlog.start_length_rate,
+                        start_length=testvarlog.start_length,
+                        rate=testvarlog.rate, max_iter=testvarlog.max_iter,
+                        pad_rate=testvarlog.pad_rate, is_print=testvarlog.is_print,
+                        max_deg=testvarlog.max_deg,
+                        sign_detect_shorten_rate=testvarlog.sign_detect_shorten_rate)
+end
+
 # ======================== TestPolation ========================
 
 struct TestPolation
