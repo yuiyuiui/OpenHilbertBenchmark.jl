@@ -80,17 +80,22 @@ function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,No
             res *= "VarLog DeMode + "
             details &&
                 (res *= "VarLog DeMode, length expand rate=$(tdm.rate), pad_rate=$(tdm.pad_rate), max_deg=$(tdm.max_deg), ")
+        elseif tdm isa TestVarLsq
+            res *= "VarLsq DeMode + "
+            details &&
+                (res *= "VarLsq DeMode, length expand rate=$(tdm.rate), nseek_vec=$(tdm.nseek_vec), max_deg=$(tdm.max_deg), ")
         else
             error("Unsupported TestDeMode: $tdm")
         end
 
-        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA) && !isa(tdm, TestVarLog)
+        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA) && !isa(tdm, TestVarLog) &&
+           !isa(tdm, TestVarLsq)
             if tdm.mode_length_rate > 0
                 res *= "length_rate = $(tdm.mode_length_rate) + \n"
             else # tdm.mode_length >= 0
                 res *= "length = $(tdm.mode_length) + \n"
             end
-        elseif tdm isa TestVarLog
+        elseif tdm isa TestVarLog || tdm isa TestVarLsq
             if tdm.start_length_rate > 0
                 res *= "length_rate = $(tdm.start_length_rate) + \n"
             else # tdm.start_length >= 0
@@ -258,7 +263,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
 
     for j in 1:m
         L0 = L0_vec[j]
-        println("Running test $j of $m, L0 = $L0 \n ================================================================ \n\n\n")
+        println("Running test $j of $m, L0 = $L0 \n ================================================================\n")
         N = N_vec[j]
         x = T.((-N ÷ 2):(N ÷ 2)) .* h
         dm = test2demode(x, tdm)
@@ -318,6 +323,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
         @show L2relerr_herm_vec[j]
         @show L2relerr_hann_vec[j]
         @show L2relerr_trunc_vec[j]
+        println("\n\n\n")
     end
     is_saveset &&
         write_setting(func_type, L0_vec, h, point_density; tdm=tdm, pola=pola, trans=trans,

@@ -185,6 +185,34 @@ function test2demode(grid::Vector{<:Real}, testvarlog::TestVarLog)
                         sign_detect_shorten_rate=testvarlog.sign_detect_shorten_rate)
 end
 
+struct TestVarLsq <: TestDeMode
+    start_length_rate::Real
+    start_length::Real
+    rate::Real
+    nseek_vec::Vector{Int}
+    max_deg::Real
+    lsq_tol::Real
+    sign_detect_shorten_rate::Real
+    is_print::Bool
+end
+
+function TestVarLsq(; start_length_rate::Real=0, start_length::Real=0,
+                    rate::Real=3, nseek_vec::Vector{Int}=[1, 6], max_deg::Real=4,
+                    lsq_tol::Real=10^(-20 // 3),
+                    sign_detect_shorten_rate::Real=0.9, is_print::Bool=false)
+    return TestVarLsq(start_length_rate, start_length, rate, nseek_vec, max_deg, lsq_tol,
+                      sign_detect_shorten_rate, is_print)
+end
+
+function test2demode(grid::Vector{<:Real}, testvarlsq::TestVarLsq)
+    return VarLsqDeMode(grid; start_length_rate=testvarlsq.start_length_rate,
+                        start_length=testvarlsq.start_length,
+                        rate=testvarlsq.rate, nseek_vec=testvarlsq.nseek_vec,
+                        max_deg=testvarlsq.max_deg, lsq_tol=testvarlsq.lsq_tol,
+                        sign_detect_shorten_rate=testvarlsq.sign_detect_shorten_rate,
+                        is_print=testvarlsq.is_print)
+end
+
 # ======================== TestPolation ========================
 
 struct TestPolation

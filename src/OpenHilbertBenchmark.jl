@@ -6,12 +6,14 @@ using CairoMakie
 
 export origfunc, Hfunc
 export TestFunc, TestDeMode, TestPolation
-export TestNoDeMode, TestAsy, TestAAA, TestLogLog, TestLogAsy, TestLsqAsy, TestVarLog
+export TestNoDeMode, TestAsy, TestAAA, TestLogLog, TestLogAsy, TestLsqAsy, TestVarLog,
+       TestVarLsq
 export SchwartzFunc, RationalFuncPolesRepresent, DRationdlFunc, LogRationalFunc, MixedFunc
 export get_funcname, get_algname, write_setting, loss_bench_report
 
 export DeModeMethod, PolationMethod, DiscreteTransMethod, PolationLength
-export AsymptoticDeMode, AAADeMode, LogLogDeMode, LogAsyDeMode, LsqAsyDeMode, VarLogDeMode
+export AsymptoticDeMode, AAADeMode, LogLogDeMode, LogAsyDeMode, LsqAsyDeMode, VarLogDeMode,
+       VarLsqDeMode
 export NoPolation, InterPolation, ExtraPolation
 export FFTTrans, FIRTrans
 export hilbert
