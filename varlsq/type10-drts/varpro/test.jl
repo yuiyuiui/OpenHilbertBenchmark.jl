@@ -29,10 +29,10 @@ func_type = DRationdlFunc(even_order_vec, T[])
 
 L0_start = 2^10
 L0_rate = 2
-test_num = 8
-point_density = 16
+test_num = 10
+point_density = 12
 
-tdm = TestVarLsq(; start_length_rate=1 / 5000, rate=5, is_print=true, fine_rate=1 // 2,
+tdm = TestVarLsq(; start_length_rate=1 / 5000, rate=10, is_print=true, mindeg_gap=1 // 2,
                  nseek_vec=[1, 2, 3, 4])
 trans = FIRTrans()
 
