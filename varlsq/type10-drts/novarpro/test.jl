@@ -33,10 +33,10 @@ test_num = 8
 point_density = 16
 
 tdm = TestVarLsq(; start_length_rate=1 / 5000, rate=5, is_print=true, fine_rate=1 // 2,
-                 nseek_vec=[1, 2, 3, 4])
+                 nseek_vec=[1, 2, 3, 4], is_varpro=false)
 trans = FIRTrans()
 
-dir = "./varlsq/type10-drts/varpro"
+dir = "./varlsq/type10-drts/novarpro"
 
 fig1, fig2 = loss_bench_report(func_type, tdm, trans,
                                L0_start, L0_rate, test_num, point_density,
