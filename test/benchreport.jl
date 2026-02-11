@@ -61,10 +61,10 @@
 
     @testset "get_algname" begin
         # Test with nothing values
-        @test get_algname(nothing, nothing, nothing) == ""
+        @test get_algname(nothing, nothing) == ""
 
         # Test returns a string (actual content depends on OpenHilbert types)
-        @test get_algname(nothing, nothing, nothing) isa String
+        @test get_algname(nothing, nothing) isa String
     end
 
     @testset "write_setting" begin
@@ -77,9 +77,9 @@
             grid_gap = 0.1
             points_density = 32
 
-            # Call write_setting with nothing for tdm, pola, trans
+            # Call write_setting with nothing for tdm, trans
             write_setting(swf, L0_vec, grid_gap, points_density;
-                          file_place=tmpdir, tdm=nothing, pola=nothing, trans=nothing)
+                          file_place=tmpdir, tdm=nothing, trans=nothing)
 
             # Check that file was created
             setting_file = joinpath(tmpdir, "setting.txt")
@@ -104,7 +104,7 @@
             mf = MixedFunc(Float64; swf=swf, drtf=drf)
 
             write_setting(mf, L0_vec, grid_gap, points_density;
-                          file_place=tmpdir, tdm=nothing, pola=nothing, trans=nothing)
+                          file_place=tmpdir, tdm=nothing, trans=nothing)
 
             content2 = read(setting_file, String)
             # With details=true, MixedFunc returns detailed expressions

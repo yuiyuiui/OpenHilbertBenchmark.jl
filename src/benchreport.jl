@@ -53,7 +53,7 @@ function get_funcname(func_type::MixedFunc{T}; details::Bool=false) where {T<:Re
     return res
 end
 
-function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,Nothing},
+function get_algname(tdm::Union{TestDeMode,Nothing},
                      trans::Union{DiscreteTransMethod,Nothing}; details::Bool=false)
     res = ""
     if !isnothing(tdm)
@@ -61,59 +61,29 @@ function get_algname(tdm::Union{TestDeMode,Nothing}, pola::Union{TestPolation,No
             res *= "No DeMode + "
         elseif tdm isa TestAsy
             res *= "ASY DeMode + "
+
             details &&
                 (res *= "ASY DeMode order_vec=$([round(order, digits=2) for order in tdm.order_vec]), ")
-        elseif tdm isa TestAAA
-            res *= "AAA DeMode, max_degree=$(tdm.max_degree), "
-        elseif tdm isa TestLogLog
-            res *= "LogLog DeMode + "
-            details && (res *= "LogLog DeMode")
-        elseif tdm isa TestLogAsy
-            res *= "LogAsy DeMode + "
-            details &&
-                (res *= "LogAsy DeMode order1_scale=$(tdm.order1_scale), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
-        elseif tdm isa TestLsqAsy
-            res *= "LsqAsy DeMode + "
-            details &&
-                (res *= "LsqAsy DeMode, for LsqFit, nseek=$(tdm.nseek), start_gap=$(tdm.start_gap), for ASY, d=$(tdm.d), degree=$(tdm.degree), ")
-        elseif tdm isa TestVarLog
-            res *= "VarLog DeMode + "
-            details &&
-                (res *= "VarLog DeMode, length expand rate=$(tdm.rate), pad_rate=$(tdm.pad_rate), max_deg=$(tdm.max_deg), ")
+
+            if tdm.mode_length_rate > 0
+                res *= "mode_length_rate = $(tdm.mode_length_rate) + \n"
+            else # tdm.mode_length >= 0
+                res *= "mode_length = $(tdm.mode_length) + \n"
+            end
+
         elseif tdm isa TestVarLsq
             res *= "VarLsq DeMode + "
+
             details &&
                 (res *= "VarLsq DeMode, length expand rate=$(tdm.rate), nseek_vec=$(tdm.nseek_vec), max_deg=$(tdm.max_deg), ")
+
+            if tdm.start_length_rate > 0
+                res *= "start_length_rate = $(tdm.start_length_rate) + \n"
+            else # tdm.start_length >= 0
+                res *= "start_length = $(tdm.start_length) + \n"
+            end
         else
             error("Unsupported TestDeMode: $tdm")
-        end
-
-        if !isa(tdm, TestNoDeMode) && !isa(tdm, TestAAA) && !isa(tdm, TestVarLog) &&
-           !isa(tdm, TestVarLsq)
-            if tdm.mode_length_rate > 0
-                res *= "length_rate = $(tdm.mode_length_rate) + \n"
-            else # tdm.mode_length >= 0
-                res *= "length = $(tdm.mode_length) + \n"
-            end
-        elseif tdm isa TestVarLog || tdm isa TestVarLsq
-            if tdm.start_length_rate > 0
-                res *= "length_rate = $(tdm.start_length_rate) + \n"
-            else # tdm.start_length >= 0
-                res *= "length = $(tdm.start_length) + \n"
-            end
-        end
-    end
-
-    if !isnothing(pola)
-        if pola.hann_length > 0
-            res *= "Hann Polation, length = $(pola.hann_length) + "
-        else # pola.hann_length >= 0
-            res *= "Hann Polation, length_rate = $(pola.hann_length_rate) + "
-        end
-        if pola.herm_length > 0
-            res *= "Hermitian Polation, length = $(pola.herm_length) + "
-        else # pola.herm_length >= 0
-            res *= "Hermitian Polation, length_rate = $(pola.herm_length_rate) + "
         end
     end
 
@@ -132,21 +102,20 @@ function write_setting(func_type::TestFunc{T}, L0_vec::Vector{<:Real}, grid_gap:
                        points_density::Int;
                        file_place::String=".",
                        tdm::Union{TestDeMode,Nothing}=nothing,
-                       pola::Union{TestPolation,Nothing}=nothing,
                        trans::Union{DiscreteTransMethod,Nothing}=nothing) where {T<:Real}
     open(joinpath(file_place, "setting.txt"), "w") do f
         write(f, "Used L0: $(round.(L0_vec, digits=2))\n")
         write(f, "grid_gap: $(round(grid_gap, digits=2))\n")
         write(f, "Points density: $(points_density)\n")
         write(f, "func_type: $(get_funcname(func_type; details=true))\n")
-        return write(f, "alg: $(get_algname(tdm, pola, trans))\n")
+        return write(f, "alg: $(get_algname(tdm, trans))\n")
     end
 end
 
 # ============================== Bench Method =========================================
 
-function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr_trunc_vec,
-                         L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec;
+function loss_bench_plot(L0_vec, N_vec, maxerr_trunc_vec,
+                         L2relerr_trunc_vec;
                          title1::String="", title2::String="")
     N_vec_str = ["10^$(round(log10(N), digits=2))" for N in N_vec][1:2:end]
 
@@ -161,8 +130,6 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                yminorticksvisible=true,
                yminorticks=IntervalsBetween(2))
 
-    lines!(ax1, L0_vec, maxerr_herm_vec; label="Hermite")
-    lines!(ax1, L0_vec, maxerr_hann_vec; label="Hann")
     lines!(ax1, L0_vec, maxerr_trunc_vec; label="Trunc")
 
     ax1_top = Axis(fig1[1, 1];
@@ -194,8 +161,6 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
                yminorticksvisible=true,
                yminorticks=IntervalsBetween(2))
 
-    lines!(ax2, L0_vec, L2relerr_herm_vec; label="Hermite")
-    lines!(ax2, L0_vec, L2relerr_hann_vec; label="Hann")
     lines!(ax2, L0_vec, L2relerr_trunc_vec; label="Trunc")
 
     ax2_top = Axis(fig2[1, 1];
@@ -217,7 +182,7 @@ function loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec, maxerr
     return fig1, fig2
 end
 
-function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPolation,
+function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode,
                            trans::DiscreteTransMethod, L0_start::Real,
                            L0_rate::Real, test_num::Int, point_density::Int,
                            is_saveset::Bool, file_place::String) where {T<:Real}
@@ -254,11 +219,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
 
     println("Calculating Hilbert transform with numerical approximation...")
     m = length(L0_vec)
-    maxerr_herm_vec = zeros(T, m)
-    maxerr_hann_vec = zeros(T, m)
     maxerr_trunc_vec = zeros(T, m)
-    L2relerr_herm_vec = zeros(T, m)
-    L2relerr_hann_vec = zeros(T, m)
     L2relerr_trunc_vec = zeros(T, m)
 
     for j in 1:m
@@ -274,67 +235,30 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode, pola::TestPo
         println("beigin NoPolation")
         H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
 
-        if pola.hann_length > 0
-            δ = round(Int, pola.hann_length / h)
-        else
-            δ = round(Int, N * pola.hann_length_rate ÷ 2)
-        end
-
-        if pola.herm_length > 0
-            herm_n = round(Int, pola.herm_length / h)
-        else
-            herm_n = round(Int, N * pola.herm_length_rate ÷ 2)
-        end
-
-        println("beigin InterPolation")
-        H_hann = hilbert(f; dm=dm, pola=InterPolation(; δ=δ), trans=trans)
-        println("beigin ExtraPolation")
-        H_herm = hilbert(f; dm=dm, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
-
-        dH_herm = abs.(H_herm - H_exact)
-        dH_hann = abs.(H_hann - H_exact)
         dH_trunc = abs.(H_trunc - H_exact)
-        err_herm = maximum(dH_herm)
-        err_hann = maximum(dH_hann)
         err_trunc = maximum(dH_trunc)
-        @show err_herm
-        @show err_hann
         @show err_trunc
-        maxerr_herm_vec[j] = err_herm
-        maxerr_hann_vec[j] = err_hann
         maxerr_trunc_vec[j] = err_trunc
 
         L2f = sum(f .^ 2) - (f[1]^2 + f[end]^2) / 2
         L2f = sqrt(L2f * h)
         @show L2f
 
-        L2err_herm = sum(dH_herm .^ 2) - (dH_herm[1]^2 + dH_herm[end]^2) / 2
-        L2err_herm = sqrt(L2err_herm * h)
-        L2relerr_herm_vec[j] = L2err_herm / L2f
-
-        L2err_hann = sum(dH_hann .^ 2) - (dH_hann[1]^2 + dH_hann[end]^2) / 2
-        L2err_hann = sqrt(L2err_hann * h)
-        L2relerr_hann_vec[j] = L2err_hann / L2f
-
         L2err_trunc = sum(dH_trunc .^ 2) - (dH_trunc[1]^2 + dH_trunc[end]^2) / 2
         L2err_trunc = sqrt(L2err_trunc * h)
         L2relerr_trunc_vec[j] = L2err_trunc / L2f
 
-        @show L2relerr_herm_vec[j]
-        @show L2relerr_hann_vec[j]
         @show L2relerr_trunc_vec[j]
         println("\n\n\n")
     end
     is_saveset &&
-        write_setting(func_type, L0_vec, h, point_density; tdm=tdm, pola=pola, trans=trans,
+        write_setting(func_type, L0_vec, h, point_density; tdm=tdm, trans=trans,
                       file_place=file_place)
-    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, pola, trans))"
-    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, pola, trans))"
+    title1 = "Max error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, trans))"
+    title2 = "L2 relative error \n $(get_funcname(func_type; details=false)) \n$(get_algname(tdm, trans))"
 
-    return loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec,
-                           maxerr_trunc_vec,
-                           L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec
-                           ; title1=title1, title2=title2)
+    return loss_bench_plot(L0_vec, N_vec, maxerr_trunc_vec, L2relerr_trunc_vec;
+                           title1=title1, title2=title2)
 end
 
 function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
@@ -351,7 +275,6 @@ function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
 end
 
 function loss_bench_report(func::Function, Hfunc::Function, tdm::TestDeMode,
-                           pola::TestPolation,
                            trans::DiscreteTransMethod, L0_start::Real,
                            L0_rate::Real, test_num::Int, point_density::Int;
                            T::Type{<:Real}=Float64)
@@ -367,11 +290,7 @@ function loss_bench_report(func::Function, Hfunc::Function, tdm::TestDeMode,
 
     println("Calculating Hilbert transform with numerical approximation...")
     m = length(L0_vec)
-    maxerr_herm_vec = zeros(T, m)
-    maxerr_hann_vec = zeros(T, m)
     maxerr_trunc_vec = zeros(T, m)
-    L2relerr_herm_vec = zeros(T, m)
-    L2relerr_hann_vec = zeros(T, m)
     L2relerr_trunc_vec = zeros(T, m)
 
     for j in 1:m
@@ -386,56 +305,21 @@ function loss_bench_report(func::Function, Hfunc::Function, tdm::TestDeMode,
 
         H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
 
-        if pola.hann_length > 0
-            δ = round(Int, pola.hann_length / h)
-        else
-            δ = round(Int, N * pola.hann_length_rate ÷ 2)
-        end
-
-        if pola.herm_length > 0
-            herm_n = round(Int, pola.herm_length / h)
-        else
-            herm_n = round(Int, N * pola.herm_length_rate ÷ 2)
-        end
-
-        H_hann = hilbert(f; dm=dm, pola=InterPolation(; δ=δ), trans=trans)
-        H_herm = hilbert(f; dm=dm, pola=ExtraPolation(; n=herm_n, h=h), trans=trans)
-
-        dH_herm = abs.(H_herm - H_exact)
-        dH_hann = abs.(H_hann - H_exact)
         dH_trunc = abs.(H_trunc - H_exact)
-        err_herm = maximum(dH_herm)
-        err_hann = maximum(dH_hann)
         err_trunc = maximum(dH_trunc)
-        @show err_herm
-        @show err_hann
         @show err_trunc
-        maxerr_herm_vec[j] = err_herm
-        maxerr_hann_vec[j] = err_hann
         maxerr_trunc_vec[j] = err_trunc
 
         L2f = sum(f .^ 2) - (f[1]^2 + f[end]^2) / 2
         L2f = sqrt(L2f * h)
         @show L2f
 
-        L2err_herm = sum(dH_herm .^ 2) - (dH_herm[1]^2 + dH_herm[end]^2) / 2
-        L2err_herm = sqrt(L2err_herm * h)
-        L2relerr_herm_vec[j] = L2err_herm / L2f
-
-        L2err_hann = sum(dH_hann .^ 2) - (dH_hann[1]^2 + dH_hann[end]^2) / 2
-        L2err_hann = sqrt(L2err_hann * h)
-        L2relerr_hann_vec[j] = L2err_hann / L2f
-
         L2err_trunc = sum(dH_trunc .^ 2) - (dH_trunc[1]^2 + dH_trunc[end]^2) / 2
         L2err_trunc = sqrt(L2err_trunc * h)
         L2relerr_trunc_vec[j] = L2err_trunc / L2f
 
-        @show L2relerr_herm_vec[j]
-        @show L2relerr_hann_vec[j]
         @show L2relerr_trunc_vec[j]
     end
 
-    return loss_bench_plot(L0_vec, N_vec, maxerr_herm_vec, maxerr_hann_vec,
-                           maxerr_trunc_vec,
-                           L2relerr_herm_vec, L2relerr_hann_vec, L2relerr_trunc_vec)
+    return loss_bench_plot(L0_vec, N_vec, maxerr_trunc_vec, L2relerr_trunc_vec)
 end
