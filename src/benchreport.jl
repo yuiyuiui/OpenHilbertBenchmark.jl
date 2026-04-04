@@ -71,17 +71,6 @@ function get_algname(tdm::Union{TestDeMode,Nothing},
                 res *= "mode_length = $(tdm.mode_length) + \n"
             end
 
-        elseif tdm isa TestVarLsq
-            res *= "VarLsq DeMode + "
-
-            details &&
-                (res *= "VarLsq DeMode, length expand rate=$(tdm.rate), nseek_vec=$(tdm.nseek_vec), max_deg=$(tdm.max_deg), ")
-
-            if tdm.start_length_rate > 0
-                res *= "start_length_rate = $(tdm.start_length_rate) + \n"
-            else # tdm.start_length >= 0
-                res *= "start_length = $(tdm.start_length) + \n"
-            end
         else
             error("Unsupported TestDeMode: $tdm")
         end
@@ -233,7 +222,7 @@ function loss_bench_report(func_type::TestFunc{T}, tdm::TestDeMode,
         H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
         println("beigin NoPolation")
-        H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
+        H_trunc = hilbert(f, x; dm=dm, pola=NoPolation(), trans=trans)
 
         dH_trunc = abs.(H_trunc - H_exact)
         err_trunc = maximum(dH_trunc)
@@ -270,7 +259,7 @@ function cal_Hlogrtf_nume(L0::T, point_density::Int, d::Int) where {T<:Real}
     f = [func(xi) for xi in x]
     # IMPORTANT: pass the grid so the transform matches the sampling step h.
     dm = NoDeMode()
-    Hf = hilbert(f; dm=dm, pola=NoPolation(), trans=FFTTrans(; pad_rate=0)) .* x
+    Hf = hilbert(f, x; dm=dm, pola=NoPolation(), trans=FFTTrans(; pad_rate=0)) .* x
     return Hf
 end
 
@@ -303,7 +292,7 @@ function loss_bench_report(func::Function, Hfunc::Function, tdm::TestDeMode,
         f = view(f0, (mid - N ÷ 2):(mid + N ÷ 2))
         H_exact = view(H_exact0, (mid - N ÷ 2):(mid + N ÷ 2))
 
-        H_trunc = hilbert(f; dm=dm, pola=NoPolation(), trans=trans)
+        H_trunc = hilbert(f, x; dm=dm, pola=NoPolation(), trans=trans)
 
         dH_trunc = abs.(H_trunc - H_exact)
         err_trunc = maximum(dH_trunc)
